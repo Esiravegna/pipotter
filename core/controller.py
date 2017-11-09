@@ -66,14 +66,14 @@ class PiPotterController(object):
         logger.debug("Found a wand, starting loop")
         while True:
             # Main Loop
-            sigil = self.wand_detector.read_wand()
             t_end = time.time() + SECONDS_TO_DRAW
             while time.time() < t_end:
+                sigil = self.wand_detector.read_wand()
                 # for the next seconds, build a sigil.
-                self.wand_detector.read_wand()
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord(END_KEY):
                     break
+            self.wand_detector.find_wand()
             logger.debug("read finished, processing")
             key = cv2.waitKey(1) & 0xFF
             if key == ord(END_KEY):

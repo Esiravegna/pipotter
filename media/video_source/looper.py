@@ -21,29 +21,58 @@ class VideoLooper(VideoSource):
         """
         if not exists(videofile):
             raise MediaError("Unable to find {}".format(videofile))
+        logger.debug("Looping {}.. Getting number of frames, please wait".format(videofile))
         self.video = cv2.VideoCapture(videofile)
         self.source = videofile
         self.frame_counter = 0
-        self.total_frames = int(self.video.get(cv2.CAP_PROP_POS_FRAMES))
+        self.total_frames = self._count_frames_manual(cv2.VideoCapture(videofile))
         self.flip = flip
         self.max_width = max_width
+        logger.debug("{} ready with {} frames".format(videofile, self.total_frames))
+
+    def _count_frames_manual(self, video):
+        """
+        Frames counting is really buggy, got to do this old fashioned.
+        :param: video, a valid opencv2 video
+        :return: int, the number of frames
+        """ 
+        total = 0
+        # loop over the frames of the video
+        while True:
+            # grab the current frame
+            (grabbed, frame) = video.read()
+            # check to see if we have reached the end of the
+            # video
+            if not grabbed:
+                break
+            # increment the total number of frames read
+            total += 1 
+        return total
+
+    def _read(self):
+        """
+        reads a single frame
+        """
+        self.frame_counter += 1
+        return self.video.read()
 
     def read(self):
         """
         given the proper initialized video, reads a frame from it
         :return: (boolean, cv2Image) captured from the videofile, or False, None on error  as per the read cv2 VideoCapture command
         """
-        ret, frame = self.video.read()
-        self.frame_counter += 1
+        ret, frame = self._read()
         # did we reached the end of the video? If so, reset the counter and loop over again
-        if self.frame_counter == self.total_frames:
+        if self.frame_counter >= self.total_frames:
+            logger.debug("Looping back {} to zero".format(self.source))
+            self.video.release()
             self.video  = cv2.VideoCapture(self.source)
             self.frame_counter = 0
+            ret, frame = self._read()
         if ret:
             for a_flip in self.flip:
                 cv2.flip(frame, a_flip, frame)
                 frame = imutils.resize(frame, width=self.max_width)
-                cv2.imshow("looper live", frame)
         return ret, frame
 
     def end(self):

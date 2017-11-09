@@ -37,7 +37,7 @@ class CropRectangle(object):
         # So, the left and top, in order to be updated, must be smaller than the previus values and at minimun, zero.
         self.left = int(left) if (left < self.left or not self.left and left >= 0) else self.left
         self.top = int(top) if (top < self.top or not self.top and top >= 0) else self.top
-        # For the right and bottm, must be bigger, without upper cap. Handle with care.
+        # For the right and bottom, must be bigger, without upper cap. Handle with care.
         self.right = int(right) if (right > self.right or not self.right) else self.right
         self.bottom = int(bottom) if (bottom > self.bottom or not self.bottom) else self.bottom
 
@@ -142,8 +142,6 @@ class WandDetector(object):
             self.prev_frame_gray = gray
             # it's a good moment now to initialize the sigil mask
             self.sigil_mask = np.zeros_like(frame)
-            logger.debug(circles)
-
         except Exception as e:
             logger.error("Error detecting a wand: {}".format(e))
         return gray, circles
@@ -173,7 +171,7 @@ class WandDetector(object):
             # Let's do a bit of Optical Flow
             new_circles, st, err = cv2.calcOpticalFlowPyrLK(self.prev_frame_gray,
                                                             gray,
-                                                            self.prev_frame_gray,
+                                                            self.prev_circles,
                                                             None, **self.lk_params)
             # Select good points
             new_valid_points = new_circles[st == 1]
@@ -183,29 +181,31 @@ class WandDetector(object):
                 logger.debug("Reading points")
                 a, b = new.ravel()
                 c, d = old.ravel()
-                self.cropbox.update(a, b, c, d)
+                self.cropbox.update(b, a, c, d)
                 # only try to detect gesture on highly-rated points
                 if i < self.circles_threshold:
                     dist = hypot(a - c, b - d)
-                    if dist < self.movment_threshold:
+                    if dist < self.movement_threshold:
                         cv2.line(self.sigil_mask, (a, b), (c, d), self.sigil_color, 3)
                         if self.draw_windows:
                             cv2.circle(frame, (a, b), 5, self.sigil_color, -1)
                             cv2.putText(frame, str(i), (a, b), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
             # There, let's crop the sigil mask to get the maybeaspell thingie
             self.maybe_a_spell = self.cropbox.crop(self.sigil_mask)
-            img = cv2.add(frame, self.sigil_mask)
-
-            # Let's update the global objects so the next iteration considers the current object as the previous.
-            self.prev_frame_gray = gray.copy()
-            self.prev_circles = new_valid_points.reshape(-1, 1, 2)
+            logger.debug(self.maybe_a_spell.shape)
             # If we want to show the content,so be it.
             if self.draw_windows:
+                img = cv2.add(frame, self.sigil_mask)
                 cv2.putText(img, "Press {} to close.".format(END_KEY), (5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
                 cv2.imshow("Raspberry Potter previous frame", self.prev_frame_gray)
                 cv2.imshow("Raspberry Potter debug", img)
                 cv2.imshow("Raspberry potter read sigil", self.maybe_a_spell)
+                cv2.imshow("Raspberry potter read mask", self.sigil_mask)
+
+            # Let's update the global objects so the next iteration considers the current object as the previous.
+            self.prev_frame_gray = gray.copy()
+            self.prev_circles = new_valid_points.reshape(-1, 1, 2)
         except Exception as e:
             logger.error("Error reading the wand: {}".format(e))
         return self.maybe_a_spell
@@ -229,7 +229,7 @@ class WandDetector(object):
             detected_circles = cv2.HoughCircles(a_frame, cv2.HOUGH_GRADIENT,
                                                 dp=self.circles_dp,
                                                 minDist=self.circles_mindist,
-                                                # These seems to been hard discovered by the owner of the original code,
+                                                # These seems to been hard findings by the owner of the original code,
                                                 # not touching it.
                                                 param1=240, param2=8,
                                                 minRadius=self.circles_minradius,
