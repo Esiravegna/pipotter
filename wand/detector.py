@@ -6,53 +6,9 @@ import numpy as np
 
 from core.config import settings
 from core.error import WandError
-
+from wand.spellscontainer import SpellsContainer
 logger = logging.getLogger(__name__)
 END_KEY = settings['PIPOTTER_END_LOOP']
-
-
-class CropRectangle(object):
-    """
-    A very simple object in charge to update and keep a rectangle for numpy slicing afterwards
-    """
-
-    def __init__(self):
-        """
-        Just the constructor
-        """
-        self.top = False
-        self.bottom = False
-        self.left = False
-        self.right = False
-
-    def update(self, top, left, right, bottom):
-        """
-        given a box, updates the parameters should it be needed.
-        The rationale is to expand the box containing the coordinates, and never decrease it
-        :param top: (number) top of the box
-        :param left: (number) left of the same thing
-        :param right: (number) right of the box)
-        :param bottom: (numner) bottom of the box
-        """
-        # So, the left and top, in order to be updated, must be smaller than the previus values and at minimun, zero.
-        self.left = int(left) if (left < self.left or not self.left and left >= 0) else self.left
-        self.top = int(top) if (top < self.top or not self.top and top >= 0) else self.top
-        # For the right and bottom, must be bigger, without upper cap. Handle with care.
-        self.right = int(right) if (right > self.right or not self.right) else self.right
-        self.bottom = int(bottom) if (bottom > self.bottom or not self.bottom) else self.bottom
-
-    def crop(self, mask, inplace=False):
-        """
-        Given a numpy mask, crops it and returns a copy
-        :param mask: numpy array like, sliceable and implementing copy
-        :param inplace: boolean, whether to return a copy of the array (default) or not.
-        :return: crop (copy) of the same array
-        """
-        if inplace:
-            result = mask[self.top:self.bottom, self.left:self.right]
-        else:
-            result = mask[self.top:self.bottom, self.left:self.right].copy()
-        return result
 
 
 class WandDetector(object):
@@ -66,8 +22,8 @@ class WandDetector(object):
                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
                  circles_dp=3,
                  circles_mindist=100,
-                 circles_minradius=4,
-                 circles_maxradius=14,
+                 circles_minradius=2,
+                 circles_maxradius=8,
                  circles_threshold=5,
                  movement_threshold=80,
                  draw_windows=False):
@@ -99,8 +55,8 @@ class WandDetector(object):
         self.circles_minradius = circles_minradius
         self.circles_maxradius = circles_maxradius
         self.circles_threshold = circles_threshold
-        # rectangle in which a potential spell is contained
-        self.cropbox = CropRectangle()
+        # History tracker of all the lines drawn
+        self.spells_container = SpellsContainer()
         # color to trace the sigils, white in this case
         self.sigil_color = [255] * 3
         # Internal state of tracked objects
@@ -140,8 +96,10 @@ class WandDetector(object):
             # Now let's update the internal states
             self.prev_circles = circles
             self.prev_frame_gray = gray
-            # it's a good moment now to initialize the sigil mask
+            # it's a good moment now to initialize the sigil mask and reset the container
             self.sigil_mask = np.zeros_like(frame)
+            self.spells_container.reset()
+
         except Exception as e:
             logger.error("Error detecting a wand: {}".format(e))
         return gray, circles
@@ -154,14 +112,12 @@ class WandDetector(object):
         The controller is responsible for running this as long as it see fit.
         :return: a masked spell
         """
-        logger.debug("Reading a wand")
+        #logger.debug("Reading a wand")
         if self.prev_frame_gray is None:
             raise WandError("No previous frame found, terminating")
-
         # Grab the current frame:
         try:
             ret = False
-            logger.debug("Trying to get a valid frame")
             # while we did got not a valid frame...
             while not ret:
                 ret, frame = self.video.read()
@@ -176,23 +132,22 @@ class WandDetector(object):
             # Select good points
             new_valid_points = new_circles[st == 1]
             old_valid_points = self.prev_circles[st == 1]
-            logger.debug("Got a valid frame!")
             for i, (new, old) in enumerate(zip(new_valid_points, old_valid_points)):
-                logger.debug("Reading points")
-                a, b = new.ravel()
-                c, d = old.ravel()
-                self.cropbox.update(b, a, c, d)
+                a, b = new.ravel() # left, top
+                c, d = old.ravel() # right, bottom
                 # only try to detect gesture on highly-rated points
                 if i < self.circles_threshold:
                     dist = hypot(a - c, b - d)
                     if dist < self.movement_threshold:
+                        self.spells_container[i] = [a, b, c, d]
+                        # then, grab only the most complex one,a nd crop accordingly.
                         cv2.line(self.sigil_mask, (a, b), (c, d), self.sigil_color, 3)
                         if self.draw_windows:
                             cv2.circle(frame, (a, b), 5, self.sigil_color, -1)
                             cv2.putText(frame, str(i), (a, b), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
             # There, let's crop the sigil mask to get the maybeaspell thingie
-            self.maybe_a_spell = self.cropbox.crop(self.sigil_mask)
-            logger.debug(self.maybe_a_spell.shape)
+            left, top, right, bottom = self.spells_container.get_box()
+            self.maybe_a_spell = self.sigil_mask[top:bottom, left:right].copy()
             # If we want to show the content,so be it.
             if self.draw_windows:
                 img = cv2.add(frame, self.sigil_mask)
@@ -201,12 +156,10 @@ class WandDetector(object):
                 cv2.imshow("Raspberry Potter previous frame", self.prev_frame_gray)
                 cv2.imshow("Raspberry Potter debug", img)
                 cv2.imshow("Raspberry potter read sigil", self.maybe_a_spell)
-                cv2.imshow("Raspberry potter read mask", self.sigil_mask)
-
             # Let's update the global objects so the next iteration considers the current object as the previous.
             self.prev_frame_gray = gray.copy()
             self.prev_circles = new_valid_points.reshape(-1, 1, 2)
-        except Exception as e:
+        except (TypeError, ValueError, cv2.error) as e:
             logger.error("Error reading the wand: {}".format(e))
         return self.maybe_a_spell
 

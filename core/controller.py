@@ -34,18 +34,18 @@ class PiPotterController(object):
         if video_source_name == 'picamera':
             try:
                 camera = kwargs['picamera']
-                video = picamera(camera, flip=flip)
+                self.video = picamera(camera, flip=flip)
             except KeyError:
                 raise Exception(
                     "For use a picamera source, a picamera parameter with a valid camera should be provided")
         elif video_source_name == 'looper':
             try:
                 video_file = kwargs['video_file']
-                video = looper(video_file, flip=flip)
+                self.video = looper(video_file, flip=flip)
             except KeyError:
                 raise Exception(
                     "For use a video loop source, a video file parameter with a valid camera should be provided")
-        self.wand_detector = WandDetector(video=video, draw_windows=draw_windows)
+        self.wand_detector = WandDetector(video=self.video, draw_windows=draw_windows)
         self.draw_windows = draw_windows
 
     def _terminate(self):
@@ -56,6 +56,14 @@ class PiPotterController(object):
         self.video.end()
         if self.draw_windows:
             cv2.destroyAllWindows()
+
+    def _process_sigil(self, a_sigil):
+        """
+        Process a sigil
+        :param a_sigil: 
+        :return: 
+        """
+        logger.debug('processing sigil {}'.format(a_sigil.shape))
 
     def run(self):
         """
@@ -68,11 +76,12 @@ class PiPotterController(object):
             # Main Loop
             t_end = time.time() + SECONDS_TO_DRAW
             while time.time() < t_end:
-                sigil = self.wand_detector.read_wand()
+                self.wand_detector.read_wand()
                 # for the next seconds, build a sigil.
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord(END_KEY):
                     break
+            self._process_sigil(self.wand_detector.maybe_a_spell)
             self.wand_detector.find_wand()
             logger.debug("read finished, processing")
             key = cv2.waitKey(1) & 0xFF
