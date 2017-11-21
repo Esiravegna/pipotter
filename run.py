@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 @click.command()
 @click.option('--video-source', required=True, type=click.Choice(['looper', 'picamera']),
               help='Video source to use : picamera or loop')
-@click.option('--video-file', help='')
+@click.option('--video-file', help='Video file to loop')
+@click.option('--video-file', help='Video file to loop')
 @click.option('--draw-windows/--no-draw-windows', default=False, help='Draw windows from CV2')
 def run_command(video_source, video_file, draw_windows):
     """

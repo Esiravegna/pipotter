@@ -1,4 +1,5 @@
 import logging
+from os.path import join
 import time
 
 import cv2
@@ -47,6 +48,8 @@ class PiPotterController(object):
                     "For use a video loop source, a video file parameter with a valid camera should be provided")
         self.wand_detector = WandDetector(video=self.video, draw_windows=draw_windows)
         self.draw_windows = draw_windows
+        # should we receive a directory to save each image, do it.
+        self.save_images_directory = kwargs.get('save_images_directory', None)
 
     def _terminate(self):
         """
@@ -64,6 +67,10 @@ class PiPotterController(object):
         :return: 
         """
         logger.debug('processing sigil {}'.format(a_sigil.shape))
+        if self.save_images_directory:
+            full_filename = join(self.save_images_directory, "{}.png".format(time.time()))
+            logger.debug("Saving  the sigil into {}".format(full_filename))
+            cv2.imwrite(full_filename, a_sigil)
 
     def run(self):
         """
