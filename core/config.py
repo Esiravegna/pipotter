@@ -14,5 +14,7 @@ settings = {
     # Flip list, as per all the video_source objects
     'PIPOTTER_FLIP_VIDEO': getenv('PIPOTTER_FLIP_VIDEO', [1]),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
-    'PIPOTTER_SECONDS_TO_DRAW': getenv('PIPOTTER_SECONDS_TO_DRAW', 3)
+    'PIPOTTER_SECONDS_TO_DRAW': getenv('PIPOTTER_SECONDS_TO_DRAW', 3),
+    # Where to retrieve/store the SpellNet file
+    'PIPOTTER_MODEL_DIRECTORY': getenv('PIPOTTER_MODEL_DIRECTORY', './wand/spell_net/model')
 }
