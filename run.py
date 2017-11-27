@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 @click.option('--video-file', help='Video file to loop')
 @click.option('--video-file', help='Video file to loop')
 @click.option('--draw-windows/--no-draw-windows', default=False, help='Draw windows from CV2')
-def run_command(video_source, video_file, draw_windows):
+@click.option('--save_images_directory', help='Store the detected movements as images in the passed directory')
+def run_command(video_source, video_file, draw_windows, save_images_directory):
     """
     The main method
     """
@@ -30,6 +31,8 @@ def run_command(video_source, video_file, draw_windows):
         cam.resolution = (640, 480)
         cam.framerate = 24
         arguments = {'video_file': video_file}
+    if save_images_directory:
+        arguments['save_images_directory'] = save_images_directory
     controller = PiPotterController(video_source_name=video_source, draw_windows=draw_windows, **arguments)
     controller.run()
 

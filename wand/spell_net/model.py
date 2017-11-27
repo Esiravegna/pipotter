@@ -1,6 +1,6 @@
 import logging
 from json import loads
-
+import numpy as np
 from keras.models import load_model
 from keras.utils import get_file
 
@@ -39,5 +39,5 @@ class SpellNet(object):
         :param image: numpy.array of shape (32, 32, 3)
         :return: dictionary of {class1: prob1, ..., classN:ProbN}
         """
-        predictions = self.model.predict(image, verbose=1)
+        predictions = self.model.predict(np.array([image/255]), verbose=1)
         return {self.classes[str(k)]: v for k, v in enumerate(predictions[0])}

@@ -6,7 +6,7 @@ from wand.spell_net.model import SpellNet
 
 @pytest.fixture(scope='module')
 def random_image():
-    return np.random.rand(32, 32, 3)/127.5
+    return np.random.rand(32, 32, 3)/255
 
 
 def test_create_model():

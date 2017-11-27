@@ -152,7 +152,8 @@ class WandDetector(object):
             if self.draw_windows:
                 img = cv2.add(frame, self.sigil_mask)
                 cv2.putText(img, "Press {} to close.".format(END_KEY), (5, 25),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,
+                                                            255, 255))
                 cv2.imshow("Raspberry Potter previous frame", self.prev_frame_gray)
                 cv2.imshow("Raspberry Potter debug", img)
                 cv2.imshow("Raspberry potter read sigil", self.maybe_a_spell)
