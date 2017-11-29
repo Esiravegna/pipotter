@@ -42,16 +42,16 @@ def not_a_valid_file():
 
 
 def test_happy_path(a_player, a_valid_file):
-    fx = AudioEffect(a_player, a_valid_file)
+    fx = AudioEffect(a_valid_file, mediaplayer=a_player)
     fx.run()
 
 
 def test_invalid_file(a_player, not_a_valid_file):
     with pytest.raises(SFXError):
-        fx = AudioEffect(a_player, not_a_valid_file)
+        fx = AudioEffect(not_a_valid_file, mediaplayer=a_player)
 
 
 def test_faulty_palyer_response(a_broken_player, a_valid_file):
-    fx = AudioEffect(a_broken_player, a_valid_file)
+    fx = AudioEffect(mediaplayer=a_broken_player,the_filename=a_valid_file)
     with pytest.raises(SFXError):
         fx.run()

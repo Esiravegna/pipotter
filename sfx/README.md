@@ -10,9 +10,10 @@ Later on, these are grouped into the Effects container.
 
 Example:
 
-    ```python
+    ```
     an_effect = LightEffect(a_controller, a_light)
     an_effect.read_json("[{'group':'1', 'command': 'fade_up': 'payload': '50'}]")
+    an_effect.run()
     ```
 
 ## Effect Container
@@ -21,12 +22,12 @@ This object is esentially alist of Effect objects that on the run command will r
 
 Example:
 
-    ```python
+    ```
     from sfx.effect_container import EffectContainer
     alohomora = EffectContainer()
     alohomora.append(sound_for_alohomora)
     alohomora.append(light_for_alohomora)
-    alohomora.run
+    alohomora.run()
     ```
 
 ## Audio
@@ -34,7 +35,7 @@ Example:
 This module essentially calls a mediaplayer (which *must* be installed beforehand) and runs the player for a given file.
 
 Example:
-    ```python
+    ```
     from sfx.audio.effect import AudioEffect
     audio_for_alohomora = AudioEffect('/path/to/alohomora/sfx/audio_file')
     audio_for_alohomora.run()
@@ -49,8 +50,7 @@ This module does use the [MiLight python](https://github.com/McSwindler/python-m
 
 Example:
     ```
-    an_effect = LightEffect(a_controller, a_light)
-    an_effect.read_json("[{'group':'1', 'command': 'fade_up': 'payload': '50'}]")
+    an_effect = LightEffect("[{'group':'1', 'command': 'fade_up': 'payload': '50'}]", a_controller, a_light)
     ```
 The most important part here is the configuration json, that may take this form:
 

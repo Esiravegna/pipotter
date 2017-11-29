@@ -5,6 +5,7 @@ from os.path import exists
 from core.error import SFXError
 
 from sfx.effect_container import Effect
+from sfx.audio.player import Mediaplayer
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +19,11 @@ class AudioEffect(Effect):
     an_effect = AudioEffect(A_mediaPlayer, a_variable_containing_the_path_to_run)
     an_effect.run()
     ```
-    :param mediaplayer a valid sfx.audio.player.MediaPlayer instance
     :param the_filename: a valid existing filename
+    :param mediaplayer a valid sfx.audio.player.MediaPlayer instance
     """
 
-    def __init__(self, mediaplayer, the_filename):
+    def __init__(self, the_filename, mediaplayer=Mediaplayer()):
         self.player = mediaplayer
         self.filename = the_filename
         super().__init__()

@@ -60,24 +60,16 @@ def a_bulb():
 
 
 def test_happy_path(a_controller, a_bulb, valid_json):
-    fx = LightEffect(a_controller, a_bulb, time_to_sleep=0)
-    fx.read_json(valid_json)
+    fx = LightEffect(valid_json, a_controller, a_bulb, time_to_sleep=0)
     fx.run()
 
 
 def test_invalid_json_will_work_but_log_a_error(a_controller, a_bulb, invalid_command_json):
-    fx = LightEffect(a_controller, a_bulb, time_to_sleep=0)
-    fx.read_json(invalid_command_json)
+    fx = LightEffect( invalid_command_json, a_controller, a_bulb, time_to_sleep=0)
     fx.run()
 
 
 def test_a_broken_json_will_fail(a_controller, a_bulb, broken_json):
-    fx = LightEffect(a_controller, a_bulb, time_to_sleep=0)
     with pytest.raises(SFXError):
-        fx.read_json(broken_json)
+        fx = LightEffect(broken_json,  a_controller, a_bulb, time_to_sleep=0)
 
-
-def test_we_cannot_run_a_non_configured_controller(a_controller, a_bulb):
-    fx = LightEffect(a_controller, a_bulb, time_to_sleep=0)
-    with pytest.raises(SFXError):
-        fx.run()

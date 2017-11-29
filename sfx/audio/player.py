@@ -1,6 +1,6 @@
 import logging
 from os.path import exists
-from os.errno import ENOENT
+from errno import ENOENT
 import subprocess
 from core.error import SFXError
 from core.config import settings

@@ -1,7 +1,9 @@
 import json
 import logging
+import milight
 from time import sleep
 
+from core.config import settings
 from core.error import SFXError
 from sfx.effect_container import Effect
 
@@ -15,8 +17,7 @@ class LightEffect(Effect):
     
     Usage:
     ```
-    an_effect = LightEffect(a_controller, a_light)
-    an_effect.read_json("[{'group':'1', 'command': 'fade_up': 'payload': '50'}]") 
+    an_effect = LightEffect("[{'group':'1', 'command': 'fade_up', 'payload': '50'}]",a_controller, a_light)
     ```
     
     So, this command will create an effect from a controller, a light and a json string. In this case, the json string contains the fade_up command, 
@@ -24,9 +25,19 @@ class LightEffect(Effect):
     Please do mind that a single LightEffect object can pile up commands and there's no need to pile up multiple LightEffects commands, yet possible.
     """
 
-    def __init__(self, milight_controller, milight_light, time_to_sleep=2):
+    def __init__(self,
+                 jsonable_string,
+                 milight_controller=milight.MiLight({'host': settings['PIPOTTER_MILIGHT_SERVER'], 'port': settings['PIPOTTER_MILIGHT_PORT']}),
+                 milight_light=milight.LightBulb(['rgbw']), #TODO Evaluate if makes sense to restrict this to rgbw as we'd need color for the spells
+                 time_to_sleep=1):
         """
         The constructor
+        :param jsonable_string: a string that can be turn into a json element. Must be in the form: 
+        [
+            {"group":"1", "command":"command", "payload": "value"},
+            ...,
+            {"group":"1", "command":"command", "payload": "value"}
+        ]
         :param milight_controller: a MiLight controller object
         :param milight_light: a Milight LigthBulb object
         :param time_to_sleep: int, seconds to wait before the 
@@ -38,8 +49,9 @@ class LightEffect(Effect):
         self.light = milight_light
         self.commands = []
         self.time_to_sleep = time_to_sleep
+        self._read_json(jsonable_string)
 
-    def read_json(self, jsonable_string):
+    def _read_json(self, jsonable_string):
         """
         Reads the config json file out from jsonable_string and creates a Milight sequence to later run on
         :param jsonable_string: a string that can be turn into a json element. Must be in the form: 
@@ -72,15 +84,13 @@ class LightEffect(Effect):
                 self.commands.append(the_command_result)
             except (ValueError, AttributeError) as e:
                 logger.error("Unable to decode {} due to {}".format(a_command, e))
-        logger.debug("JSON processed succesfully")
+        logger.debug("JSON processed sucessfully")
 
     def run(self):
         """
         Runs the effects previously piled up
         """
         logger.info("Running the commands")
-        if not self.commands:
-            raise SFXError("cannot be run before configured")
         try:
             logger.info("Running the commands")
             key = self.controller.repeat(self.commands, rep=0)

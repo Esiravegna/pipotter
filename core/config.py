@@ -11,7 +11,7 @@ settings = {
     # MiLight servers to use
     'PIPOTTER_MILIGHT_SERVER': getenv('PIPOTTER_MILIGHT_SERVER', 'server'),
     # MiLight port
-    'PIPOTTER_MILIGHT_SERVER': getenv('PIPOTTER_MILIGHT_PORT', 8899),
+    'PIPOTTER_MILIGHT_PORT': getenv('PIPOTTER_MILIGHT_PORT', 8899),
     # Flip list, as per all the video_source objects
     'PIPOTTER_FLIP_VIDEO': getenv('PIPOTTER_FLIP_VIDEO', [1]),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
