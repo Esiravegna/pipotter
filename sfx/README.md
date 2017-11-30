@@ -3,6 +3,42 @@
 This directory contains the Audio and light sfx modules. Please refer below on how to use them.
 
 
+## Factory
+
+This is the object that creates all the below described elements. Essentially, reads a json file of the form:
+
+        ```
+        [
+            "spell_name_1": [
+                {"AudioEffect": "file/to/play"},
+                {"LightEffect": [
+                    {'group':'1', 'command': 'fade_up'},
+                     ...
+                    {'group':'1', 'command': 'brighten', 'payload': '50'},
+                ]},
+            ],
+            ...
+            "spell_name_N": [
+                {"AudioEffect": "file/to/play"},
+                {"LightEffect": [
+                    {'group':'1', 'command': 'fade_up'},
+                     ...
+                    {'group':'1', 'command': 'brighten', 'payload': '50'},
+                ]},
+            ]
+
+        ]
+        ```
+Where spell_name is the name you want the sequence of Effects to be run, such as 'alohomora' or 'arresto_momentum'. Please do realize that SpellNet should have a class named _exactly_ the same way for that spell to run, as the [controller](../core/controller) will run it using the name as the key.
+By the same token, a dictionary with module names that implements all the EffectContainer method must be passed as a dictionary on the constructor, such as:
+
+    ```
+    {'AudioEffect': AudioEffect, 'LightEffect': LightEffect}
+    ```
+Realize how the keys for that dict matches the ones in the json file.
+
+
+
 ## Effect
 
 An effect is an object that performs a part of the action of a spell, nominally, light and sound. It must inherit from the Effect class, implements a run() method and provide a unique name for reference.

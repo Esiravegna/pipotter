@@ -1,15 +1,14 @@
 import json
 import logging
 
-from sfx.effect_container import EffectContainer
-
 from core.error import SFXError
-
 # Should you to add new effects, import them below and add to the available effects dict
 from sfx.audio.effect import AudioEffect
+from sfx.effect_container import EffectContainer
 from sfx.lights.effect import LightEffect
 
 logger = logging.getLogger(__name__)
+
 
 class EffectFactory(object):
     """
@@ -21,7 +20,7 @@ class EffectFactory(object):
         ```
         from sfx.factory import EffectFactory
         effects = EffectFactory('/path/to/the/spells.json')
-        effects['alohomora'].run()
+        effects.run('alohomora']
         ```
     
     The JSON file would look something like:
@@ -50,24 +49,17 @@ class EffectFactory(object):
     Please note that the order is not mandatory, however it is suggested that the audio effects runs first as they may go in the background.
     """
 
-    # the available effects
-    EFFECTS_LIST = {
-        'AudioEffect': AudioEffect,
-        'LightEffect': LightEffect
-    }
-
-    def _create_effect(self, effect, effect_value):
+    def __init__(self, config_file, effects_list={'AudioEffect': AudioEffect, 'LightEffect': LightEffect}):
         """
-        Given the VALID_EFFECT_NAME constant and the effect variable, creates a valid effect
-        :param effect: a valid effect name as per the EFFECT_LIST keys
-        :param effect_value: the payload
+        The constructor. It accept two parameters:
+        :param config_file: string, path where to find the json config file
+        :param effects_list: a list containing the effect name and the module to use. Look at the default for examples. 
+            Remeber that the values of that dictionary MUST be callable and Effect-like.
         """
-        return self.EFFECTS_LIST[effect]()
-
-    def __init__(self, config_file):
         logger.info("Creating a group of effects")
+        self.effects_list = effects_list
         try:
-            with open(config_file, 'rb') as fp:
+            with open(config_file, 'r') as fp:
                 config = json.loads(fp.read())
         except FileNotFoundError as e:
             raise SFXError("Unable to find {} : {}".format(config_file, e))
@@ -76,22 +68,41 @@ class EffectFactory(object):
         self.spells = {}
         # Let's read our config file
         try:
-            for a_spell in config:
+            for a_spell_name, a_spell_value in config.items():
                 # Let's get the Name
-                spell_name = a_spell.keys()[0]
                 # Let's create a container with that name
-                self.spells[spell_name] = EffectContainer()
-                for an_effect in a_spell[spell_name]:
-                    if an_effect not in self.EFFECTS_LIST:
-                        logger.error("{} not a valid effect name".format(an_effect))
-                        continue
-
-
-
-
-
+                logger.debug("Creating the config for {}".format(a_spell_name))
+                self.spells[a_spell_name] = EffectContainer()
+                # For each effect in the list of spells:
+                for an_effect in a_spell_value:
+                    # The effect is a dictionary of 'EffectName':'payload', so:
+                    print(an_effect)
+                    for effect_name, value in an_effect.items():
+                        # Is the effect name a valid one?
+                        if effect_name not in self.effects_list.keys():
+                            logger.error("{} not a valid effect name".format(effect_name))
+                            continue
+                        # if it is, let's add to the container
+                        self.spells[a_spell_name].append(self._create_effect(effect_name, value))
+                        logger.debug("{} added to {}".format(effect_name, a_spell_name))
         except (TypeError, AttributeError, IndexError) as e:
             raise SFXError("Cannot parse config file due to {}".format(e))
+        logger.info("Configuration created with {} spells on it".format(len(self.spells)))
 
+    def _create_effect(self, effect, effect_value):
+        """
+        Given the VALID_EFFECT_NAME constant and the effect variable, creates a valid effect
+        :param effect: a valid effect name as per the EFFECT_LIST keys
+        :param effect_value: the payload
+        """
+        return self.effects_list[effect](effect_value)
 
-
+    def run(self, spell):
+        """
+        Actually runs an EffectContainer for the given spell as key
+        :param spell: str, the spell name, or key
+        """
+        logger.info("Attempting to run it for {}".format(spell))
+        if spell not in self.spells.keys():
+            logger.error("{} not found in spells list, aborting".format(spell))
+        self.spells[spell].run()
