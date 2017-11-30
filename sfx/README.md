@@ -101,6 +101,6 @@ The most important part here is the configuration json, that may take this form:
 * command is a valid MiLight python interface command. Check the link for details.
 * payload if the value to be sent, and it is optional, as some commands, such as fade_out does not uses it.
 
-
+Note: if you use the color command, as the value can be specified in hex, rgb or hls values, for simplicity sake only hex is supported.
 
 

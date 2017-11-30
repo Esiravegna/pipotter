@@ -7,6 +7,7 @@ import cv2
 from media.video_source import VALID_SOURCES, looper, picamera
 from wand.detector import WandDetector
 from wand.spell_net.model import SpellNet
+from sfx.factory import EffectFactory
 
 logger = logging.getLogger(__name__)
 from core.config import settings
@@ -21,22 +22,24 @@ class PiPotterController(object):
     PiPotter controller. Initializes all the objects and 
     """
 
-    def __init__(self, video_source_name, draw_windows=False, **kwargs):
+    def __init__(self, video_source_name, configuration_file, draw_windows=False, **kwargs):
         """
         The Controller
         :param video_source_name: (string) picamera | looper, any of the controllers to extract the images
+        :param configuration_file: (string) the json configuration file for the EffectsFactory
         :param draw_windows: Boolean, should the windows being drawn
         :param args: extra args
         :param kwargs: extra kwargs
         """
         # Let's the validation begin
-        logger.debug("initializing controller")
+        logger.info("initializing controller")
         flip = settings['PIPOTTER_FLIP_VIDEO']
         if video_source_name not in VALID_SOURCES:
             raise Exception("Invalid controller name :{}. Must be either of : {}".format(VALID_SOURCES))
         if video_source_name == 'picamera':
             try:
                 camera = kwargs['picamera']
+                logger.debug("Using PiCamera")
                 self.video = picamera(camera, flip=flip)
             except KeyError:
                 raise Exception(
@@ -44,10 +47,12 @@ class PiPotterController(object):
         elif video_source_name == 'looper':
             try:
                 video_file = kwargs['video_file']
+                logger.debug("Using a video file located in {}".format(video_file))
                 self.video = looper(video_file, flip=flip)
             except KeyError:
                 raise Exception(
                     "For use a video loop source, a video file parameter with a valid camera should be provided")
+        logger.debug("Initializing wand detector")
         self.wand_detector = WandDetector(video=self.video, draw_windows=draw_windows)
         self.draw_windows = draw_windows
         # should we receive a directory to save each image, do it.
@@ -56,6 +61,8 @@ class PiPotterController(object):
         self.spell_net = SpellNet()
         # this threshold will be used to determine if we got a spell (above the thresholld) or noise (below)
         self.spell_threshold = settings['PIPOTTER_THRESHOLD_TRIGGER']
+        logger.debug("Creating the effects container")
+        self.effects = EffectFactory(config_file=configuration_file)
 
     def _terminate(self):
         """
@@ -112,7 +119,7 @@ class PiPotterController(object):
         """
         if spellname != settings['PIPOTTER_NO_SPELL_LABEL']:
             logger.info("Running sequence for {}".format(spellname))
-            logger.debug("***** {} *****".format(spellname))
+            self.effects[spellname].run()
         else:
             logger.info('no spell detected')
 

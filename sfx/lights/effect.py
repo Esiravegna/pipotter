@@ -23,6 +23,7 @@ class LightEffect(Effect):
     So, this command will create an effect from a controller, a light and a json string. In this case, the json string contains the fade_up command, 
     will run it on the light group 1 and the value for the aforementioned command will be 50.
     Please do mind that a single LightEffect object can pile up commands and there's no need to pile up multiple LightEffects commands, yet possible.
+    Important: if you use the color command, as it requires a specific helper to translate the value (either in hsl, rgb or hex), only hex is supported.
     """
 
     def __init__(self,
@@ -76,11 +77,15 @@ class LightEffect(Effect):
                 value = a_command.get('payload', None)
                 if value:
                     # If the command got a parameter...
-                    the_command_result = the_command(a_command['payload'], a_command['group'])
+                    if  a_command['command'] == 'color':
+                        #  The color processing is different for all the rest of them as
+                        # it uses a 0.255 value calculated from  a helper
+                        # For simplicity sake, let's use only hex values.
+                        value = milight.color_from_hex(value)
+                    the_command_result = the_command(value, a_command['group'])
                 else:
                     # Nope, just the bulb group as a parameter
                     the_command_result = the_command(a_command['group'])
-
                 self.commands.append(the_command_result)
             except (ValueError, AttributeError) as e:
                 logger.error("Unable to decode {} due to {}".format(a_command, e))
