@@ -1,0 +1,247 @@
+{
+  "arresto_momentum": [
+    {
+      "AudioEffect": "./media/audio/arresto_momentum/arresto_momentum.mp3"
+    },
+    {
+      "LightEffect": [
+        {
+          "group": 1,
+          "command": "fade_down"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#ffff80"
+        },
+        {
+          "group": 1,
+          "command": "fade_up"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "brightness",
+          "payload" : 75
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#b3b300"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "fade_down"
+        }
+      ]
+    }
+  ],
+  "locomotor": [
+    {
+      "AudioEffect": "./media/audio/locomotor/locomotor.mp3"
+    },
+    {
+      "LightEffect": [
+        {
+          "group": 1,
+          "command": "fade_down"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#ffff80"
+        },
+        {
+          "group": 1,
+          "command": "fade_up"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "brightness",
+          "payload": 55
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#9933ff"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "fade_down"
+        }
+      ]
+    }
+  ],
+  "lumos": [
+    {
+      "AudioEffect": "./media/audio/lumos/lumos.wav"
+    },
+    {
+      "LightEffect": [
+        {
+          "group": 1,
+          "command": "fade_down"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#e6f2ff"
+        },
+        {
+          "command": "wait",
+          "value": 0.5
+        },
+        {
+          "group": 1,
+          "command": "fade_up"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#ffffff"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        }
+
+      ]
+    }
+  ],
+  "noctis": [
+    {
+      "AudioEffect": "./media/audio/noctis/noctis.wav"
+    },
+    {
+      "LightEffect": [
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#330033"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#000066"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "fade_down"
+        }
+
+      ]
+    }
+  ],
+  "meteojinx": [
+    {
+      "AudioEffect": "./media/audio/meteojinx/meteojinx.mp3"
+    },
+    {
+      "LightEffect": [
+        {
+          "group": 1,
+          "command": "fade_down"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#2d2d86"
+        },
+        {
+          "group": 1,
+          "command": "fade_up"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "brightness",
+          "payload" : 75
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#e6f2ff"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "fade_down"
+        }
+      ]
+    }
+  ],
+  "silencio": [
+    {
+      "AudioEffect": "./media/audio/silencio/silencio.wav"
+    },
+    {
+      "LightEffect": [
+        {
+          "group": 1,
+          "command": "fade_down"
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#006644"
+        },
+        {
+          "group": 1,
+          "command": "fade_up"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "brightness",
+          "payload": 55
+        },
+        {
+          "group": 1,
+          "command": "color",
+          "payload": "#00b377"
+        },
+        {
+          "command": "wait",
+          "value": 1
+        },
+        {
+          "group": 1,
+          "command": "fade_down"
+        }
+      ]
+    }
+  ],
+  "wand_detected": [
+    {
+      "AudioEffect": "./media/audio/wand_detected/wand_detected.mp3"
+    }
+  ]
+}

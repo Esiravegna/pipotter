@@ -26,7 +26,8 @@ class WandDetector(object):
                  circles_maxradius=8,
                  circles_threshold=5,
                  movement_threshold=80,
-                 draw_windows=False):
+                 draw_windows=False,
+                 effect_on_detection=False):
         """
         The constructor
         :param video: A proper cv2 video renderer or the raspberry pi OpenCV object. MUST IMPLEMENT THE read() method.
@@ -41,6 +42,7 @@ class WandDetector(object):
         :param circles_threshold: (int) threshold of circles to read, aka, the top circles_threshold circles detected.
         :param movement_threshold: (int) threshold of movement after which an Optical Flow is computed.
         :param draw_windows: boolean: Debugging purposes, uses cv.imshow and creates the proper masks.
+        :param effect_on_detection: Effect object. On the wand detection, runs the effect, if passed.
         """
         self.video = video
         self.draw_windows = draw_windows
@@ -65,6 +67,7 @@ class WandDetector(object):
         self.sigil_mask = None  # Where the gestures are drawn
         # The most important element: the mask in which a gesture is stored
         self.maybe_a_spell = None
+        self.wand_detected_spell = effect_on_detection
 
     def find_wand(self):
         """
@@ -102,6 +105,9 @@ class WandDetector(object):
 
         except Exception as e:
             logger.error("Error detecting a wand: {}".format(e))
+        # Should we run the effect?
+        if self.wand_detected_spell:
+            self.wand_detected_effect.run()
         return gray, circles
 
     def read_wand(self):

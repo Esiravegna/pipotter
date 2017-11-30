@@ -75,17 +75,18 @@ class LightEffect(Effect):
 
                 the_command = getattr(self.light, a_command['command'])
                 value = a_command.get('payload', None)
+                group = a_command.get('group', None)
                 if value:
                     # If the command got a parameter...
-                    if  a_command['command'] == 'color':
+                    if a_command['command'] == 'color':
                         #  The color processing is different for all the rest of them as
                         # it uses a 0.255 value calculated from  a helper
                         # For simplicity sake, let's use only hex values.
                         value = milight.color_from_hex(value)
-                    the_command_result = the_command(value, a_command['group'])
+                    the_command_result = the_command(value, group) if group else the_command(value) # the wait command does not take a group parameter
                 else:
                     # Nope, just the bulb group as a parameter
-                    the_command_result = the_command(a_command['group'])
+                    the_command_result = the_command(group)
                 self.commands.append(the_command_result)
             except (ValueError, AttributeError) as e:
                 logger.error("Unable to decode {} due to {}".format(a_command, e))
