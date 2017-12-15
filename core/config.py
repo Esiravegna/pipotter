@@ -26,5 +26,8 @@ settings = {
     'PIPOTTER_THRESHOLD_TRIGGER': float(1/6),
     # How do we cann a label for no spell detected? defaults to background. It cannot be any of the spells already existing
     'PIPOTTER_NO_SPELL_LABEL': getenv('PIPOTTER_NO_SPELL_LABEL', 'background'),
+    # Optionally, we will use a remote SpellNET server?
+    'PIPOTTER_REMOTE_SPELLNET_SERVER': getenv('PIPOTTER_REMOTE_SPELLNET_SERVER', False),
+    'PIPOTTER_REMOTE_SPELLNET_SERVER_PORT': getenv('PIPOTTER_REMOTE_SPELLNET_SERVER_PORT', 4242)
 
 }
