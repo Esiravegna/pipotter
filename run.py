@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @click.option('--save_images_directory', help='Store the detected movements as images in the passed directory')
 @click.option('--config-file', help='Where to read the configuration file. Defaults to ./config.json',
               default='./config.json')
-def run_command(video_source, video_file, draw_windows, save_images_directory):
+def run_command(video_source, video_file, draw_windows, save_images_directory, config_file):
     """
     The main method
     """
@@ -36,7 +36,7 @@ def run_command(video_source, video_file, draw_windows, save_images_directory):
     if save_images_directory:
         arguments['save_images_directory'] = save_images_directory
     controller = PiPotterController(video_source_name=video_source, draw_windows=draw_windows,
-                                    configuration_file=arguments['config_file'], **arguments)
+                                    configuration_file=config_file, **arguments)
     controller.run()
 
 

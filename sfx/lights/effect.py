@@ -28,7 +28,7 @@ class LightEffect(Effect):
 
     def __init__(self,
                  jsonable_string,
-                 milight_controller=milight.MiLight({'host': settings['PIPOTTER_MILIGHT_SERVER'], 'port': settings['PIPOTTER_MILIGHT_PORT']}),
+                 milight_controller=milight.MiLight({'host': settings['PIPOTTER_MILIGHT_SERVER'], 'port': settings['PIPOTTER_MILIGHT_PORT']}, wait_duration=0.025),
                  milight_light=milight.LightBulb(['rgbw']), #TODO Evaluate if makes sense to restrict this to rgbw as we'd need color for the spells
                  time_to_sleep=1):
         """
@@ -72,7 +72,6 @@ class LightEffect(Effect):
             try:
                 # Essentially: for each str command attribute, get the command from the light element
                 # and piles it up into the list using the payload and group element
-
                 the_command = getattr(self.light, a_command['command'])
                 value = a_command.get('payload', None)
                 group = a_command.get('group', None)
@@ -84,6 +83,9 @@ class LightEffect(Effect):
                         # For simplicity sake, let's use only hex values.
                         value = milight.color_from_hex(value)
                     the_command_result = the_command(value, group) if group else the_command(value) # the wait command does not take a group parameter
+                elif not group:
+                    # This is a generic wait command, so:
+                    the_command_result = the_command(a_command.get('value', 1))
                 else:
                     # Nope, just the bulb group as a parameter
                     the_command_result = the_command(group)

@@ -60,7 +60,8 @@ class EffectFactory(object):
         self.effects_list = effects_list
         try:
             with open(config_file, 'r') as fp:
-                config = json.loads(fp.read())
+                str_json = fp.read()
+                config = json.loads(str_json)
         except FileNotFoundError as e:
             raise SFXError("Unable to find {} : {}".format(config_file, e))
         except json.decoder.JSONDecodeError as e:
@@ -76,7 +77,6 @@ class EffectFactory(object):
                 # For each effect in the list of spells:
                 for an_effect in a_spell_value:
                     # The effect is a dictionary of 'EffectName':'payload', so:
-                    print(an_effect)
                     for effect_name, value in an_effect.items():
                         # Is the effect name a valid one?
                         if effect_name not in self.effects_list.keys():
@@ -89,12 +89,18 @@ class EffectFactory(object):
             raise SFXError("Cannot parse config file due to {}".format(e))
         logger.info("Configuration created with {} spells on it".format(len(self.spells)))
 
+    def __getitem__(self, spellname):
+        return self.spells[spellname]
+
     def _create_effect(self, effect, effect_value):
         """
         Given the VALID_EFFECT_NAME constant and the effect variable, creates a valid effect
         :param effect: a valid effect name as per the EFFECT_LIST keys
         :param effect_value: the payload
         """
+        # As per the effect defilition, effect_value should be a JSONAble string, so:
+        if type(effect_value) is not str:
+            effect_value = json.dumps(effect_value)
         return self.effects_list[effect](effect_value)
 
     def run(self, spell):

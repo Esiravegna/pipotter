@@ -5,4 +5,5 @@ if [ -f settings.sh ]; then
     source settings.sh
 fi
 source activate pipotter
+export KERAS_BACKEND=tensorflow
 python run.py "$@"

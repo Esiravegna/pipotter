@@ -14,3 +14,6 @@ See the code for further details.
 ## SpellNet
 
 Essentially, a very single single-module Conv2D network and a couple of Dense layes. See the [Jupyter book](./spell_net/spell_net.ipynb) for details.
+
+## SpellNet Server
+

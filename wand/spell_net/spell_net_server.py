@@ -27,7 +27,7 @@ def load_model(model_path=settings['PIPOTTER_MODEL_DIRECTORY'],
     :param remote_location: where to get the models, defaults to config
     :return: keras model, classes
     """
-    logger.debug("Loading model file")
+    logger.debug("Loading model file from {} into {}".format(remote_location, model_path))
     model_file = get_file(fname=H5, origin="{}/{}".format(remote_location, H5), cache_dir=model_path)
     model = load_model(model_file)
     class_file = get_file(fname=CLASSES, origin="{}/{}".format(remote_location, CLASSES), cache_dir=model_path)
