@@ -1,4 +1,4 @@
-name: pipotter
+name: pipotter_train
 channels:
 - menpo
 - conda-forge
