@@ -1,4 +1,5 @@
 import logging
+
 import time
 from os.path import join
 
@@ -19,7 +20,7 @@ SECONDS_TO_DRAW = settings['PIPOTTER_SECONDS_TO_DRAW']
 
 class PiPotterController(object):
     """
-    PiPotter controller. Initializes all the objects and 
+    PiPotter controller. Initializes all the objects and runs the core
     """
 
     def __init__(self, video_source_name, configuration_file, draw_windows=False, **kwargs):
@@ -38,7 +39,7 @@ class PiPotterController(object):
             raise Exception("Invalid controller name :{}. Must be either of : {}".format(VALID_SOURCES))
         if video_source_name == 'picamera':
             try:
-                camera = kwargs['picamera']
+                camera = kwargs['camera']
                 logger.debug("Using PiCamera")
                 self.video = picamera(camera, flip=flip)
             except KeyError:

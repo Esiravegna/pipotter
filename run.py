@@ -1,5 +1,6 @@
 import logging
-
+from picamera import PiCamera
+cam = PiCamera()
 import click
 
 from core.config import settings
@@ -28,11 +29,9 @@ def run_command(video_source, video_file, draw_windows, save_images_directory, c
         arguments = {'video_file': video_file}
     elif video_source == 'picamera':
         from media.video_source import picamera
-        import picamera
-        cam = picamera.PiCamera()
         cam.resolution = (640, 480)
         cam.framerate = 24
-        arguments = {'video_file': video_file}
+        arguments = {'camera': cam}
     if save_images_directory:
         arguments['save_images_directory'] = save_images_directory
     controller = PiPotterController(video_source_name=video_source, draw_windows=draw_windows,

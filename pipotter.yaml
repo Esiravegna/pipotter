@@ -1,27 +1,88 @@
 name: pipotter
+channels:
+- defaults
 dependencies:
-- openssl=1.0.1k=1
-- pip=7.1.2=py34_0
-- python=3.4.3=1
-- setuptools=18.1=py34_0
-- sqlite=3.8.4.1=1
-- wheel=0.24.0=py34_0
-- xz=5.0.5=0
-- zlib=1.2.8=0
+- backports.functools_lru_cache=1.4=py_0
+- bkcharts=0.2=py_0
+- bokeh=0.12.11=pyh998a6ed_0
+- bokeh_conda_requirements=0.12.11=py3_0
+- bzip2=1.0.6=0
+- ca-certificates=2017.7.27.1=0
+- certifi=2017.11.5=py36h3c44272_0
+- chardet=3.0.4=py36_0
+- click=6.7=py36_0
+- cloudpickle=0.5.2=pyh848e718_0
+- cycler=0.10.0=py36_0
+- dask=0.16.0=pyhee6dcb8_0
+- dask-core=0.16.0=pyhde7358a_0
+- decorator=4.1.2=py_0
+- distributed=1.20.1=py36h5fa2724_0
+- ffmpeg=3.2.4=h11ee089_0
+- freetype=2.7=0
+- giflib=5.1.4=h3b1de47_0
+- h5py=2.7.1=py36h2858dbd_0
+- hdf5=1.8.17=0
+- heapdict=1.0.0=py36_0
+- idna=2.6=py36_0
+- imageio=2.2.0=py_0
+- jasper=1.900.1=hb74bc11_4
+- jinja2=2.8=py36_0
+- jpeg=9b=0
+- libgfortran=3.0.0=0
+- libpng=1.6.28=0
+- libtiff=4.0.6=0
+- libwebp=0.5.2=hcb3eeb6_7
+- locket=0.2.0=py36_0
+- markupsafe=0.23=py36_0
+- matplotlib=2.1.0=py36h5af8cd7_0
+- msgpack-python=0.4.8=py36_0
+- ncurses=5.9=0
+- networkx=2.0=pyh562e4ea_0
+- numpy=1.13.3=py36hfdddcb4_0
+- openblas=0.2.19=0
+- opencv=3.3.0=py36hb02bd27_0
+- openssl=1.0.2l=0
+- pandas=0.21.0=py36hb930e1e_0
+- partd=0.3.8=py_0
+- pillow=3.4.2=py36_0
+- pip=9.0.1=py36_0
+- psutil=5.4.1=py36hce9773c_0
+- pyparsing=2.2.0=py36_0
+- python=3.6.3=hea4cac4_0
+- python-dateutil=2.6.1=py_0
+- pytz=2017.3=pyh61df4b5_0
+- pywavelets=0.5.2=np113py36_0
+- pyyaml=3.11=py36_0
+- readline=6.3=0
+- requests=2.18.4=py36h0397818_0
+- scikit-image=0.13.1=py36h2293cb9_0
+- scipy=1.0.0=py36h741f5fb_0
+- setuptools=38.2.3=py36h2883f55_0
+- six=1.11.0=py36h1999902_0
+- sortedcontainers=1.5.7=py36_0
+- sqlite=3.15.0=0
+- tblib=1.3.2=py_0
+- tk=8.6.6=0
+- toolz=0.8.2=py36_0
+- tornado=4.5.2=py36h7189fac_0
+- urllib3=1.22=py36_0
+- wheel=0.30.0=py36h76583d5_0
+- x264=20131217=h754e1d8_0
+- xz=5.2.2=0
+- yaml=0.1.6=0
+- zict=0.1.3=pyh645aacb_0
+- zlib=1.2.11=0
 - pip:
   - absl-py==0.1.7
+  - backports.functools-lru-cache==1.4
   - bleach==1.5.0
   - html5lib==0.9999999
-  - keras==2.1.2
+  - imgaug==0.2.5
   - markdown==2.6.10
-  - milight==0.6
-  - numpy==1.14.0rc1
   - picamera==1.13
-  - protobuf==3.5.0.post1
-  - pyyaml==3.12
-  - scipy==1.0.0
-  - six==1.11.0
+  - protobuf==3.5.1
   - tensorflow==1.4.0
   - tensorflow-tensorboard==0.1.8
   - werkzeug==0.13
+prefix: /home/esteban/berryconda3/envs/pipotter
 
