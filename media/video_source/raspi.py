@@ -33,7 +33,7 @@ class PiCameraCV(object):
 
         frame, ret = None, False
         try:
-            self.camera.capture(self.tream, format='jpeg')
+            self.camera.capture(self.stream, format='jpeg')
             frame = cv2.imdecode(np.fromstring(self.stream.getvalue(), dtype=np.uint8), 1)
             # Let's flip the images as needed
             for a_flip in self.flip:

@@ -38,3 +38,13 @@ conda env create -f pipotter_training.yaml
 ```bash
 conda env create -f pipotter.yaml
 ```
+The TensorFlow part will be tricky, as the [working images](http://ci.tensorflow.org/view/Nightly/job/nightly-pi-python3/) are available for python 3.4, while berryconda provides 3.6. Once you download the wheel, proceed to:
+```bash
+wheel install /the/path/to/the/tensorflow.whl
+``` 
+and then:
+```bash
+pip install protobuf absl-py tensorflow-tensorboard
+```
+
+Et voila!
