@@ -17,3 +17,5 @@ Essentially, a very single single-module Conv2D network and a couple of Dense la
 
 ## SpellNet Server
 
+A webservice so you can run tensorflow as a webservice and remotely queue it. The code was never used as I finally could install tensorflow locally, use at your own risk.
+
