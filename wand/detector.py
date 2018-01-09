@@ -3,6 +3,7 @@ from math import hypot
 
 import cv2
 import numpy as np
+import readchar
 
 from core.config import settings
 from core.error import WandError
@@ -85,16 +86,16 @@ class WandDetector(object):
                 # while we did got not a valid frame...
                 while not ret:
                     ret, frame = self.video.read()
-                    key = cv2.waitKey(1) & 0xFF
-                    if key == ord(END_KEY):
+                    key = readchar.readkey()
+                    if key == END_KEY:
                         break
                 # now, to gray
                 gray = self._to_gray(frame)
                 # Let's keep looping until we get a wand detected
                 logger.debug("Starting to detect wands")
                 circles = self._find_circles(gray)
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord(END_KEY):
+                key = readchar.readkey()
+                if key == END_KEY:
                     break
             # Now let's update the internal states
             self.prev_circles = circles

@@ -84,5 +84,6 @@ dependencies:
   - tensorflow==1.4.0
   - tensorflow-tensorboard==0.1.8
   - werkzeug==0.13
+  - readchar==0.7
 prefix: /home/esteban/berryconda3/envs/pipotter
 

@@ -62,5 +62,6 @@ dependencies:
   - pywavelets==0.5.2
   - scikit-image==0.13.1
   - tqdm==4.19.4
+  - readchar==0.7
 prefix: C:\Users\esteb\Miniconda3\envs\pipotter
 
