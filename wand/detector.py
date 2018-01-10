@@ -3,13 +3,11 @@ from math import hypot
 
 import cv2
 import numpy as np
-import readchar
 
 from core.config import settings
 from core.error import WandError
 from wand.spellscontainer import SpellsContainer
 logger = logging.getLogger(__name__)
-END_KEY = settings['PIPOTTER_END_LOOP']
 
 
 class WandDetector(object):
@@ -86,17 +84,11 @@ class WandDetector(object):
                 # while we did got not a valid frame...
                 while not ret:
                     ret, frame = self.video.read()
-                    key = readchar.readkey()
-                    if key == END_KEY:
-                        break
                 # now, to gray
                 gray = self._to_gray(frame)
                 # Let's keep looping until we get a wand detected
                 logger.debug("Starting to detect wands")
                 circles = self._find_circles(gray)
-                key = readchar.readkey()
-                if key == END_KEY:
-                    break
             # Now let's update the internal states
             self.prev_circles = circles
             self.prev_frame_gray = gray
@@ -158,7 +150,7 @@ class WandDetector(object):
             # If we want to show the content,so be it.
             if self.draw_windows:
                 img = cv2.add(frame, self.sigil_mask)
-                cv2.putText(img, "Press {} to close.".format(END_KEY), (5, 25),
+                cv2.putText(img, "Press CTRL+C to close", (5, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,
                                                             255, 255))
                 cv2.imshow("Raspberry Potter previous frame", self.prev_frame_gray)

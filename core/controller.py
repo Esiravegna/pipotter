@@ -2,7 +2,6 @@ import logging
 
 import time
 from os.path import join
-import readchar
 
 import cv2
 
@@ -138,14 +137,7 @@ class PiPotterController(object):
             while time.time() < t_end:
                 self.wand_detector.read_wand()
                 # for the next seconds, build a sigil.
-                key = readchar.readkey()
-                if key == END_KEY:
-                    break
             maybe_a_spellname = self._process_sigil(self.wand_detector.maybe_a_spell)
             self._accio_spell(maybe_a_spellname)
             logger.debug("read finished, waiting for the next wand movement")
             self.wand_detector.find_wand()
-            key = readchar.readkey()
-			if key == END_KEY:
-                logger.info("Terminating PiPotter...")
-                break
