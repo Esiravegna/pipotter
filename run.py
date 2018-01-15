@@ -1,7 +1,8 @@
 import logging
 from core.log import configure_log
 from core.config import settings
-
+from sys import exit
+from time import sleep
 configure_log(settings['PIPOTTER_LOGLEVEL'])
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,16 @@ cam = False
 try:
     from picamera import PiCamera
     cam = PiCamera()
+    cam.resolution = (640, 480)
+    cam.framerate = 64
+    logger.info("Warning up camera...")
+    sleep(2)
+    cam.shutter_speed = camera.exposure_speed
+    cam.exposure_mode = 'off'
+    g = cam.awb_gains
+    cam.awb_mode = 'off'
+    cam.awb_gains = g
+    logger.info("DING! Camera ready!")
 except Exception:
     logger.error("Cannot create Camera. If you're using a video as input, dismiss this. Otherwise, ☢")
 import click
@@ -40,8 +51,8 @@ def run_command(video_source, video_file, draw_windows, save_images_directory, c
             raise Exception("Camera object not initialized, cannot continue")
         from media.video_source import picamera
         # This references the previous cam object initialized
-        cam.resolution = (640, 480)
-        cam.framerate = 24
+        #cam.resolution = (640, 480)
+        #cam.framerate = 
         arguments = {'camera': cam}
     if save_images_directory:
         arguments['save_images_directory'] = save_images_directory
@@ -49,6 +60,10 @@ def run_command(video_source, video_file, draw_windows, save_images_directory, c
                                     configuration_file=config_file, **arguments)
     controller.run()
 
-
 if __name__ == '__main__':
-    run_command()
+    try:
+        run_command()
+    except KeyboardInterrupt:
+        cam.close()
+        logger.info("Shutting down")
+        exit(0)

@@ -48,7 +48,7 @@ class LightEffect(Effect):
         self.name = "LightEffect"
         self.controller = milight_controller
         self.light = milight_light
-        self.commands = []
+        self.commands = [] # This will be overwritten by a milight.Command object later on
         self.time_to_sleep = time_to_sleep
         self._read_json(jsonable_string)
 
@@ -89,7 +89,10 @@ class LightEffect(Effect):
                 else:
                     # Nope, just the bulb group as a parameter
                     the_command_result = the_command(group)
-                self.commands.append(the_command_result)
+                if not self.commands:
+                    self.commands = the_command_result
+                else:
+                    self.commands += the_command_result
             except (ValueError, AttributeError) as e:
                 logger.error("Unable to decode {} due to {}".format(a_command, e))
         logger.debug("JSON processed sucessfully")
@@ -101,7 +104,7 @@ class LightEffect(Effect):
         logger.info("Running the commands")
         try:
             logger.info("Running the commands")
-            key = self.controller.repeat(self.commands, rep=0)
+            key = self.controller.repeat(self.commands, reps=0)
             sleep(self.time_to_sleep)
             self.controller.cancel(key)
             logger.info("commands ran")
