@@ -21,7 +21,7 @@ class WandDetector(object):
                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
                  circles_dp=3,
                  circles_mindist=100,
-                 circles_minradius=2,
+                 circles_minradius=3,
                  circles_maxradius=8,
                  circles_threshold=5,
                  movement_threshold=80,
@@ -66,6 +66,9 @@ class WandDetector(object):
         self.sigil_mask = None  # Where the gestures are drawn
         # The most important element: the mask in which a gesture is stored
         self.maybe_a_spell = None
+
+        self.debug_window = None
+
         self.wand_detected_spell = effect_on_detection
 
     def find_wand(self):
@@ -148,14 +151,15 @@ class WandDetector(object):
             left, top, right, bottom = self.spells_container.get_box()
             self.maybe_a_spell = self.sigil_mask[top:bottom, left:right].copy()
             # If we want to show the content,so be it.
+            img = cv2.add(frame, self.sigil_mask)               
+            cv2.putText(img, "Press CTRL+C to close", (5, 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,
+                                                        255, 255))
             if self.draw_windows:
-                img = cv2.add(frame, self.sigil_mask)
-                cv2.putText(img, "Press CTRL+C to close", (5, 25),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,
-                                                            255, 255))
                 cv2.imshow("Raspberry Potter previous frame", self.prev_frame_gray)
-                cv2.imshow("Raspberry Potter debug", img)
+                cv2.imshow("Raspberry Potter debug",    img)
                 cv2.imshow("Raspberry potter read sigil", self.maybe_a_spell)
+            self.debug_window = img.copy()
             # Let's update the global objects so the next iteration considers the current object as the previous.
             self.prev_frame_gray = gray.copy()
             self.prev_circles = new_valid_points.reshape(-1, 1, 2)

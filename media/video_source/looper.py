@@ -2,7 +2,8 @@
 import logging
 from os.path import exists
 import cv2
-import imutils
+from threading import Thread
+
 from core.error import MediaError
 from media.video_source.video_source import VideoSource
 logger = logging.getLogger(__name__)

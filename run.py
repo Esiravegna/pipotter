@@ -16,14 +16,14 @@ try:
     cam.framerate = 64
     logger.info("Warning up camera...")
     sleep(2)
-    cam.shutter_speed = camera.exposure_speed
+    cam.shutter_speed = cam.exposure_speed
     cam.exposure_mode = 'off'
     g = cam.awb_gains
     cam.awb_mode = 'off'
     cam.awb_gains = g
     logger.info("DING! Camera ready!")
-except Exception:
-    logger.error("Cannot create Camera. If you're using a video as input, dismiss this. Otherwise, ☢")
+except Exception as e:
+    logger.error("Cannot create Camera. If you're using a video as input, dismiss this. Otherwise, ☢ {}".format(e))
 import click
 
 from core.controller import PiPotterController
@@ -49,10 +49,6 @@ def run_command(video_source, video_file, draw_windows, save_images_directory, c
     elif video_source == 'picamera':
         if not cam:
             raise Exception("Camera object not initialized, cannot continue")
-        from media.video_source import picamera
-        # This references the previous cam object initialized
-        #cam.resolution = (640, 480)
-        #cam.framerate = 
         arguments = {'camera': cam}
     if save_images_directory:
         arguments['save_images_directory'] = save_images_directory

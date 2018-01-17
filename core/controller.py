@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 from core.config import settings
 from core.utils import pad_to_square
 
-END_KEY = settings['PIPOTTER_END_LOOP']
 SECONDS_TO_DRAW = settings['PIPOTTER_SECONDS_TO_DRAW']
 
 
@@ -130,14 +129,15 @@ class PiPotterController(object):
         """
         logger.info("Starting PiPotter...")
         self.wand_detector.find_wand()
-        logger.debug("Found a wand, starting loop")
+        logger.info("Found a wand, starting loop")
         while True:
             # Main Loop
             t_end = time.time() + SECONDS_TO_DRAW
             while time.time() < t_end:
                 self.wand_detector.read_wand()
                 # for the next seconds, build a sigil.
-            maybe_a_spellname = self._process_sigil(self.wand_detector.maybe_a_spell)
-            self._accio_spell(maybe_a_spellname)
+            if self.wand_detector.maybe_a_spell is not None:
+                self._save_file(self.wand_detector.debug_window, preffix="DEBUG")
+                self._accio_spell(maybe_a_spellname)
             logger.debug("read finished, waiting for the next wand movement")
             self.wand_detector.find_wand()
