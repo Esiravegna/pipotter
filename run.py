@@ -13,7 +13,7 @@ try:
     from picamera import PiCamera
     cam = PiCamera()
     cam.resolution = (640, 480)
-    cam.framerate = 64
+    cam.framerate = 32
     logger.info("Warning up camera...")
     sleep(2)
     cam.shutter_speed = cam.exposure_speed

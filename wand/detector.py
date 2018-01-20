@@ -65,7 +65,7 @@ class WandDetector(object):
         self.prev_circles = []  # The previous detected circles.
         self.sigil_mask = None  # Where the gestures are drawn
         # The most important element: the mask in which a gesture is stored
-        self.maybe_a_spell = None
+        self.maybe_a_spell = np.array([])
 
         self.debug_window = None
 
@@ -144,9 +144,8 @@ class WandDetector(object):
                         self.spells_container[i] = [a, b, c, d]
                         # then, grab only the most complex one,a nd crop accordingly.
                         cv2.line(self.sigil_mask, (a, b), (c, d), self.sigil_color, 3)
-                        if self.draw_windows:
-                            cv2.circle(frame, (a, b), 5, self.sigil_color, -1)
-                            cv2.putText(frame, str(i), (a, b), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
+                        cv2.circle(frame, (a, b), 5, self.sigil_color, -1)
+                        cv2.putText(frame, str(i), (a, b), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
             # There, let's crop the sigil mask to get the maybeaspell thingie
             left, top, right, bottom = self.spells_container.get_box()
             self.maybe_a_spell = self.sigil_mask[top:bottom, left:right].copy()

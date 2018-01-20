@@ -136,7 +136,8 @@ class PiPotterController(object):
             while time.time() < t_end:
                 self.wand_detector.read_wand()
                 # for the next seconds, build a sigil.
-            if self.wand_detector.maybe_a_spell is not None:
+            if self.wand_detector.maybe_a_spell.shape[0]:
+                maybe_a_spellname = self._process_sigil(self.wand_detector.maybe_a_spell)
                 self._save_file(self.wand_detector.debug_window, preffix="DEBUG")
                 self._accio_spell(maybe_a_spellname)
             logger.debug("read finished, waiting for the next wand movement")
