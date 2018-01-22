@@ -21,7 +21,7 @@ class WandDetector(object):
                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
                  circles_dp=3,
                  circles_mindist=100,
-                 circles_minradius=3,
+                 circles_minradius=2,
                  circles_maxradius=8,
                  circles_threshold=5,
                  movement_threshold=80,
@@ -174,6 +174,7 @@ class WandDetector(object):
         :return: a grayscaled, single channel, numpy array representing the frame
         """
         gray = cv2.cvtColor(a_frame, cv2.COLOR_BGR2GRAY)
+        return gray
         dilate_kernel = np.ones(self.dilation_params, np.uint8)
         gray = cv2.dilate(gray, dilate_kernel, iterations=dilate_iterations)
         return self.clahe.apply(gray)

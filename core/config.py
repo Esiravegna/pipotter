@@ -11,7 +11,7 @@ settings = {
     # MiLight port
     'PIPOTTER_MILIGHT_PORT': getenv('PIPOTTER_MILIGHT_PORT', 8899),
     # Flip list, as per all the video_source objects
-    'PIPOTTER_FLIP_VIDEO': getenv('PIPOTTER_FLIP_VIDEO', [1]),
+    'PIPOTTER_FLIP_VIDEO': getenv('PIPOTTER_FLIP_VIDEO', [2]),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
     'PIPOTTER_SECONDS_TO_DRAW': getenv('PIPOTTER_SECONDS_TO_DRAW', 3),
     # Where to retrieve/store the SpellNet file
@@ -26,6 +26,8 @@ settings = {
     'PIPOTTER_NO_SPELL_LABEL': getenv('PIPOTTER_NO_SPELL_LABEL', 'background'),
     # Optionally, we will use a remote SpellNET server?
     'PIPOTTER_REMOTE_SPELLNET_SERVER': getenv('PIPOTTER_REMOTE_SPELLNET_SERVER', False),
-    'PIPOTTER_REMOTE_SPELLNET_SERVER_PORT': getenv('PIPOTTER_REMOTE_SPELLNET_SERVER_PORT', 4242)
+    'PIPOTTER_REMOTE_SPELLNET_SERVER_PORT': getenv('PIPOTTER_REMOTE_SPELLNET_SERVER_PORT', 4242),
+    # Effect to indicate we're set
+    'PIPOTTER_READY_SFX': getenv('PIPOTTER_READY_SFX', 'pipotter_ready')
 
 }

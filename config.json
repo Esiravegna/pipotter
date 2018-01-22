@@ -117,7 +117,21 @@
         },
         {
           "command": "wait",
-          "value": 1
+          "value": 5
+        },
+
+        {
+          "group": 1,
+          "command": "brightness",
+          "payload": 55
+        },
+        {
+          "group": 1,
+          "command": "fade_up"
+        },
+        {
+          "group": 1,
+          "command": "off"
         }
 
       ]
@@ -242,6 +256,11 @@
   "wand_detected": [
     {
       "AudioEffect": "./media/audio/wand_detected/wand_detected.mp3"
+    }
+  ],
+    "pipotter_ready": [
+    {
+      "AudioEffect": "./media/audio/pipotter_ready/pipotter_ready.mp3"
     }
   ]
 }

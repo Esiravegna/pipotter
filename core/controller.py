@@ -63,6 +63,8 @@ class PiPotterController(object):
         self.spell_threshold = settings['PIPOTTER_THRESHOLD_TRIGGER']
         logger.debug("Creating the effects container")
         self.effects = EffectFactory(config_file=configuration_file)
+        logger.info("All set!")
+        self.effects[settings['PIPOTTER_READY_SFX']].run()
 
     def _terminate(self):
         """
