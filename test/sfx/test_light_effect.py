@@ -12,7 +12,7 @@ class MockController(object):
     def cancel(self, key):
         pass
 
-    def repeat(self, seq, rep):
+    def repeat(self, seq, reps):
         pass
 
 

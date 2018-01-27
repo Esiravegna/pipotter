@@ -65,7 +65,10 @@ class WandDetector(object):
         self.prev_circles = []  # The previous detected circles.
         self.sigil_mask = None  # Where the gestures are drawn
         # The most important element: the mask in which a gesture is stored
-        self.maybe_a_spell = None
+        self.maybe_a_spell = np.array([])
+
+        self.debug_window = None
+
         self.wand_detected_spell = effect_on_detection
 
     def find_wand(self):
@@ -141,21 +144,21 @@ class WandDetector(object):
                         self.spells_container[i] = [a, b, c, d]
                         # then, grab only the most complex one,a nd crop accordingly.
                         cv2.line(self.sigil_mask, (a, b), (c, d), self.sigil_color, 3)
-                        if self.draw_windows:
-                            cv2.circle(frame, (a, b), 5, self.sigil_color, -1)
-                            cv2.putText(frame, str(i), (a, b), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
+                        cv2.circle(frame, (a, b), 5, self.sigil_color, -1)
+                        cv2.putText(frame, str(i), (a, b), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255))
             # There, let's crop the sigil mask to get the maybeaspell thingie
             left, top, right, bottom = self.spells_container.get_box()
             self.maybe_a_spell = self.sigil_mask[top:bottom, left:right].copy()
             # If we want to show the content,so be it.
+            img = cv2.add(frame, self.sigil_mask)               
+            cv2.putText(img, "Press CTRL+C to close", (5, 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,
+                                                        255, 255))
             if self.draw_windows:
-                img = cv2.add(frame, self.sigil_mask)
-                cv2.putText(img, "Press CTRL+C to close", (5, 25),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,
-                                                            255, 255))
                 cv2.imshow("Raspberry Potter previous frame", self.prev_frame_gray)
-                cv2.imshow("Raspberry Potter debug", img)
+                cv2.imshow("Raspberry Potter debug",    img)
                 cv2.imshow("Raspberry potter read sigil", self.maybe_a_spell)
+            self.debug_window = img.copy()
             # Let's update the global objects so the next iteration considers the current object as the previous.
             self.prev_frame_gray = gray.copy()
             self.prev_circles = new_valid_points.reshape(-1, 1, 2)
@@ -171,6 +174,7 @@ class WandDetector(object):
         :return: a grayscaled, single channel, numpy array representing the frame
         """
         gray = cv2.cvtColor(a_frame, cv2.COLOR_BGR2GRAY)
+        return gray
         dilate_kernel = np.ones(self.dilation_params, np.uint8)
         gray = cv2.dilate(gray, dilate_kernel, iterations=dilate_iterations)
         return self.clahe.apply(gray)
