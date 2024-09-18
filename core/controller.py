@@ -1,8 +1,8 @@
 import logging
-
+import threading
 import time
+import queue
 from os.path import join
-
 import cv2
 
 from media.video_source import VALID_SOURCES, looper, picamera
@@ -16,7 +16,6 @@ from core.utils import pad_to_square
 
 SECONDS_TO_DRAW = settings['PIPOTTER_SECONDS_TO_DRAW']
 
-
 class PiPotterController(object):
     """
     PiPotter controller. Initializes all the objects and runs the core
@@ -27,120 +26,148 @@ class PiPotterController(object):
         The Controller
         :param video_source_name: (string) picamera | looper, any of the controllers to extract the images
         :param configuration_file: (string) the json configuration file for the EffectsFactory
-        :param draw_windows: Boolean, should the windows being drawn
+        :param draw_windows: Boolean, should the windows be drawn
         :param args: extra args
         :param kwargs: extra kwargs
         """
-        # Let's the validation begin
-        logger.info("initializing controller")
+        logger.info("Initializing PiPotterController")
+
         flip = settings['PIPOTTER_FLIP_VIDEO']
         if video_source_name not in VALID_SOURCES:
-            raise Exception("Invalid controller name :{}. Must be either of : {}".format(VALID_SOURCES))
+            raise Exception(f"Invalid controller name: {video_source_name}. Must be one of: {VALID_SOURCES}")
+
         if video_source_name == 'picamera':
             try:
                 camera = kwargs['camera']
                 logger.debug("Using PiCamera")
                 self.video = picamera(camera, flip=flip)
             except KeyError:
-                raise Exception(
-                    "For use a picamera source, a picamera parameter with a valid camera should be provided")
+                raise Exception("For picamera source, a valid 'camera' parameter should be provided")
         elif video_source_name == 'looper':
             try:
                 video_file = kwargs['video_file']
-                logger.debug("Using a video file located in {}".format(video_file))
+                logger.debug(f"Using video file located at {video_file}")
                 self.video = looper(video_file, flip=flip)
             except KeyError:
-                raise Exception(
-                    "For use a video loop source, a video file parameter with a valid camera should be provided")
+                raise Exception("For looper source, a valid 'video_file' parameter should be provided")
+
         logger.debug("Initializing wand detector")
         self.wand_detector = WandDetector(video=self.video, draw_windows=draw_windows)
         self.draw_windows = draw_windows
-        # should we receive a directory to save each image, do it.
         self.save_images_directory = kwargs.get('save_images_directory', None)
-        # let's initialize the model
+
+        logger.debug("Initializing SpellNet")
         self.spell_net = SpellNet()
-        # this threshold will be used to determine if we got a spell (above the thresholld) or noise (below)
+
         self.spell_threshold = settings['PIPOTTER_THRESHOLD_TRIGGER']
         logger.debug("Creating the effects container")
         self.effects = EffectFactory(config_file=configuration_file)
-        logger.info("All set!")
+
+        logger.info("Initialization complete. Ready to go!")
         self.effects[settings['PIPOTTER_READY_SFX']].run()
 
+        # Threading setup
+        self.frame_queue = queue.Queue(maxsize=5)  # Queue to hold video frames for processing
+        self.spell_queue = queue.Queue()           # Queue to hold classified spells for effects
+        self.stop_event = threading.Event()        # Event to signal threads to stop
+
     def _terminate(self):
-        """
-        Internal. Closes all the things
-        """
+        """Internal. Closes all the things"""
         self.video.end()
         if self.draw_windows:
             cv2.destroyAllWindows()
 
     def _save_file(self, img, suffix="", preffix=""):
-        """
-        Given an img file and if save_images_directory is set, saves the img file with preffix_time_suffix.png name
-        :param img: a cv2 readable image array
-        :param suffix: str, a string to append to the filename
-        :param preffix: str, a string to prepend to the filename
-        """
+        """Saves the image if save_images_directory is set"""
         if self.save_images_directory:
             if suffix:
                 suffix = "_" + suffix
             if preffix:
                 preffix += "_"
-            filename = "{}{}{}.png".format(preffix, time.time(), suffix)
+            filename = f"{preffix}{time.time()}{suffix}.png"
             full_filename = join(self.save_images_directory, filename)
-            logger.debug("Saving  the sigil into {}".format(full_filename))
+            logger.debug(f"Saving image as {full_filename}")
             cv2.imwrite(full_filename, img)
 
     def _process_sigil(self, a_sigil):
-        """
-        Process a sigil: gets the image, pads2square it, runs it trough the network
-        :param a_sigil: numpy array containing an image of maybe a spell
-        :return: a detected sigil out of the classess
-        """
-        logger.debug('processing sigil {}'.format(a_sigil.shape))
-        # by default, we don't know
+        """Process a sigil by feeding it through the SpellNet model"""
+        logger.debug(f'Processing sigil of shape {a_sigil.shape}')
         result = settings['PIPOTTER_NO_SPELL_LABEL']
         squared = pad_to_square(a_sigil)
-        logger.debug('Feeding trough the network ')
+        logger.debug('Feeding sigil through the network')
         predictions = self.spell_net.classify(squared)
-        logger.debug("SpellNet got these results {}".format(predictions))
+        logger.debug(f"SpellNet results: {predictions}")
         self._save_file(a_sigil, preffix="RAW")
-        # let's filter them by the threshold
-        possible = dict((k, v) for k, v in predictions.items() if v >= self.spell_threshold)
+
+        possible = {k: v for k, v in predictions.items() if v >= self.spell_threshold}
         if possible:
-            logger.debug("SpellNet got these candidates {}".format(possible))
-            # so we got a possible spell. Let's get the highest ranked
+            logger.debug(f"SpellNet candidates: {possible}")
             result = max(possible, key=possible.get)
-            self._save_file(squared, preffix="{}".format(result))
+            self._save_file(squared, preffix=f"{result}")
+
         return result
 
     def _accio_spell(self, spellname):
-        """
-        Given a spellname, runs the associated effect
-        :param spellname: a string containing any valid spell or background if none
-        """
+        """Runs the effect for the given spell"""
         if spellname != settings['PIPOTTER_NO_SPELL_LABEL']:
-            logger.info("Running sequence for {}".format(spellname))
+            logger.info(f"Running effect for spell {spellname}")
             self.effects[spellname].run()
         else:
-            logger.info('no spell detected')
+            logger.info('No spell detected')
+
+    def video_capture_thread(self):
+        """Thread to capture video frames continuously"""
+        while not self.stop_event.is_set():
+            frame = self.video.read()  # Capture a frame
+            if frame is not None:
+                try:
+                    self.frame_queue.put(frame, timeout=1)  # Place frame in queue for processing
+                except queue.Full:
+                    pass  # Drop frame if queue is full
+
+    def wand_detection_thread(self):
+        """Thread to process video frames and classify spells"""
+        while not self.stop_event.is_set():
+            try:
+                frame = self.frame_queue.get(timeout=1)  # Get a frame from the queue
+                self.wand_detector.read_wand(frame)
+
+                if self.wand_detector.maybe_a_spell.shape[0]:  # If a sigil is detected
+                    maybe_a_spellname = self._process_sigil(self.wand_detector.maybe_a_spell)
+                    self.spell_queue.put(maybe_a_spellname)  # Put the spell in queue for effects
+            except queue.Empty:
+                pass
+
+    def effect_execution_thread(self):
+        """Thread to execute effects for classified spells"""
+        while not self.stop_event.is_set():
+            try:
+                spellname = self.spell_queue.get(timeout=1)  # Get the classified spell
+                self._accio_spell(spellname)  # Execute the corresponding effect
+            except queue.Empty:
+                pass
 
     def run(self):
-        """
-        runs the controller
-        """
+        """Runs the PiPotter controller"""
         logger.info("Starting PiPotter...")
-        self.wand_detector.find_wand()
-        logger.info("Found a wand, starting loop")
-        while True:
-            # Main Loop
-            t_end = time.time() + SECONDS_TO_DRAW
-            while time.time() < t_end:
-                self.wand_detector.read_wand()
-                # for the next seconds, build a sigil.
-            if self.wand_detector.maybe_a_spell.shape[0]:
-                maybe_a_spellname = self._process_sigil(self.wand_detector.maybe_a_spell)
-                self._save_file(self.wand_detector.debug_window, preffix="DEBUG")
-                self._accio_spell(maybe_a_spellname)
-            logger.debug("read finished, waiting for the next wand movement")
-            self.wand_detector.find_wand()
+
+        # Start video capture, wand detection, and effect execution threads
+        video_thread = threading.Thread(target=self.video_capture_thread)
+        wand_thread = threading.Thread(target=self.wand_detection_thread)
+        effect_thread = threading.Thread(target=self.effect_execution_thread)
+
+        video_thread.start()
+        wand_thread.start()
+        effect_thread.start()
+
+        try:
+            while True:
+                time.sleep(1)  # Keep the main loop alive
+        except KeyboardInterrupt:
+            logger.info("Shutting down PiPotter...")
+            self.stop_event.set()  # Signal threads to stop
+            video_thread.join()
+            wand_thread.join()
+            effect_thread.join()
+        finally:
+            self._terminate()  # Cleanup and close all resources

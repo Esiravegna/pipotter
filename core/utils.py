@@ -11,7 +11,7 @@ side = settings['PIPOTTER_SIDE_SPELL_NET']
 def pad_to_square(im, thumbnail_size=side, color=[0, 0, 0]):
     """
     Resizes an image into a square of thubmnail_size x thumbnail_size
-    :param im: umpy array of w x h x channels image
+    :param im: numpy array of w x h x channels image
     :param thumbnail_size: side of the square to resie de image into
     :param color: color for the background, black by default
     :return: a thumbnail_size x thumbnail_size resized image

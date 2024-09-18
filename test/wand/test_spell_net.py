@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from wand.spell_net.model import SpellNet
+from wand.spell_net2.model import SpellNet
 
 
 @pytest.fixture(scope='module')
 def random_image():
-    return np.random.rand(32, 32, 3)/255
+    return np.random.rand(224, 224, 3)
 
 
 def test_create_model():

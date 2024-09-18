@@ -6,21 +6,17 @@ settings = {
     'PIPOTTER_LOGLEVEL': getenv('PIPOTTER_LOGLEVEL', 'INFO'),
     # Extra audios should these be needed. For instance, the default allows a USB soundcard attached to ALSA.
     'PIPOTTER_EXTRA_AUDIO_COMMANDS': ["-ao", "alsa:device=hw=1,0"],
-    # MiLight servers to use
-    'PIPOTTER_MILIGHT_SERVER': getenv('PIPOTTER_MILIGHT_SERVER', 'server'),
-    # MiLight port
-    'PIPOTTER_MILIGHT_PORT': getenv('PIPOTTER_MILIGHT_PORT', 8899),
     # Flip list, as per all the video_source objects
     'PIPOTTER_FLIP_VIDEO': getenv('PIPOTTER_FLIP_VIDEO', [2]),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
     'PIPOTTER_SECONDS_TO_DRAW': getenv('PIPOTTER_SECONDS_TO_DRAW', 3),
     # Where to retrieve/store the SpellNet file
-    'PIPOTTER_MODEL_DIRECTORY': getenv('PIPOTTER_MODEL_DIRECTORY', './wand/spell_net/model'),
-    # Dimensions of the to use for SpellNet. Defaults to 32, as SpellNet was trained with that size
-    'PIPOTTER_SIDE_SPELL_NET': 32,
+    'PIPOTTER_MODEL_DIRECTORY': getenv('PIPOTTER_MODEL_DIRECTORY', './wand/spell_net2'),
+    # Dimensions of the to use for SpellNet2. Defaults to 224, as SpellNet was trained with that size
+    'PIPOTTER_SIDE_SPELL_NET': 224,
     # Threshold to trigger a positive detection. If it is lower than this, we will not trigger an effect.
     # This should be at least 1/the number of possible spells. In this case, we've six. please take a look at
-    # the media/spell_net/spell_net.ipynb file
+    # the media/spell_net2/spell_net.ipynb file
     'PIPOTTER_THRESHOLD_TRIGGER': float(1/6),
     # How do we cann a label for no spell detected? defaults to background. It cannot be any of the spells already existing
     'PIPOTTER_NO_SPELL_LABEL': getenv('PIPOTTER_NO_SPELL_LABEL', 'background'),
