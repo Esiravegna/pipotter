@@ -21,6 +21,7 @@ class LEDControl(Effect):
         self.led_pins = {}
         self.commands = []
         self.use_pwm = False
+        self.name = "LEDControlEffect"
 
         logger.info("Initializing LEDControl")
         self._read_json(jsonable_string)

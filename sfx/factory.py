@@ -2,113 +2,136 @@ import json
 import logging
 
 from core.error import SFXError
-# Should you to add new effects, import them below and add to the available effects dict
+# Should you add new effects, import them below and add to the available effects dict
 from sfx.audio.effect import AudioEffect
 from sfx.effect_container import EffectContainer
 from sfx.lights.effect import LightEffect
+from sfx.led.effect import LEDControl
+from sfx.servomotor.effect import ServoMotor
 
 logger = logging.getLogger(__name__)
 
-
 class EffectFactory(object):
     """
-    Given a configuration file containing names and effects, will create an object that can create all the specified effects.
-    This object is tightly coupled to the sfx module: Should you want to add any new effect, please take a look at the EFFECTS_LIST 
-    and the methods of this class.
+    Given a configuration file containing names and effects, this class creates objects that can generate all the specified effects.
+    This object is tightly coupled to the sfx module: to add new effects, update the EFFECTS_LIST and the methods of this class.
     
     Usage:
-        ```
+        ```python
         from sfx.factory import EffectFactory
         effects = EffectFactory('/path/to/the/spells.json')
-        effects.run('alohomora']
+        effects.run('alohomora')
         ```
     
-    The JSON file would look something like:
-        ```
-        [
-            "spell_name_1": [
+    Example JSON config:
+        ```json
+        {
+            "alohomora": [
                 {"AudioEffect": "file/to/play"},
-                {"LightEffect": [
-                    {'group':'1', 'command': 'fade_up'},
-                     ...
-                    {'group':'1', 'command': 'brighten', 'payload': '50'},
-                ]}, 
-            ],
-            ...
-            "spell_name_N": [
-                {"AudioEffect": "file/to/play"},
-                {"LightEffect": [
-                    {'group':'1', 'command': 'fade_up'},
-                     ...
-                    {'group':'1', 'command': 'brighten', 'payload': '50'},
-                ]}, 
+                {"LightEffect": {
+                    "gpio_pin": "D18",
+                    "num_leds": 16,
+                    "brightness": 0.5,
+                    "pixel_order": "GRB",
+                    "commands": [
+                        {"command": "rollcall_cycle", "payload": {"wait": 0.1}},
+                        {"command": "fade_up", "payload": {"brightness": 50}},
+                        {"command": "color", "payload": {"led": 1, "color": "#FF0000"}}
+                    ]
+                }},
+                {"LEDControl": {
+                    "led_pins": {
+                        "led1": 18,
+                        "led2": 23
+                    },
+                    "use_pwm": true,
+                    "commands": [
+                        {"command": "set_brightness", "payload": {"led": "led1", "brightness": 50}},
+                        {"command": "turn_off", "payload": {"led": "led2"}}
+                    ]
+                }},
+                {"ServoMotor": {
+                    "gpio_pin": 17,
+                    "commands": [
+                        {"command": "set_angle", "payload": {"angle": 90}},
+                        {"command": "set_angle", "payload": {"angle": 45}},
+                        {"command": "stop"}
+                    ]
+                }}
             ]
-        
-        ]
+        }
         ```
-    Please note that the order is not mandatory, however it is suggested that the audio effects runs first as they may go in the background.
+
+    Please note that the order of effects is not mandatory, but it is suggested that audio effects run first as they may go in the background.
     """
 
-    def __init__(self, config_file, effects_list={'AudioEffect': AudioEffect, 'LightEffect': LightEffect}):
+    def __init__(self, config_file, effects_list=None):
         """
-        The constructor. It accept two parameters:
-        :param config_file: string, path where to find the json config file
-        :param effects_list: a list containing the effect name and the module to use. Look at the default for examples. 
-            Remeber that the values of that dictionary MUST be callable and Effect-like.
+        The constructor accepts two parameters:
+        :param config_file: string, path to the JSON config file
+        :param effects_list: a dict containing the effect names and their corresponding class.
+            Defaults to including AudioEffect, LightEffect, LEDControl, and ServoMotor.
         """
         logger.info("Creating a group of effects")
-        self.effects_list = effects_list
+
+        if effects_list is None:
+            # Default effects list includes AudioEffect, LightEffect, LEDControl, and ServoMotor
+            self.effects_list = {
+                'AudioEffect': AudioEffect,
+                'LightEffect': LightEffect,
+                'LEDControl': LEDControl,
+                'ServoMotor': ServoMotor
+            }
+        else:
+            self.effects_list = effects_list
+
         try:
             with open(config_file, 'r') as fp:
                 str_json = fp.read()
                 config = json.loads(str_json)
         except FileNotFoundError as e:
-            raise SFXError("Unable to find {} : {}".format(config_file, e))
+            raise SFXError(f"Unable to find {config_file}: {e}")
         except json.decoder.JSONDecodeError as e:
-            raise SFXError("{} does not contains a valid json file : {}".format(config_file, e))
+            raise SFXError(f"{config_file} does not contain a valid JSON file: {e}")
+        
         self.spells = {}
-        # Let's read our config file
+
         try:
-            for a_spell_name, a_spell_value in config.items():
-                # Let's get the Name
-                # Let's create a container with that name
-                logger.debug("Creating the config for {}".format(a_spell_name))
-                self.spells[a_spell_name] = EffectContainer()
-                # For each effect in the list of spells:
-                for an_effect in a_spell_value:
-                    # The effect is a dictionary of 'EffectName':'payload', so:
+            for spell_name, spell_value in config.items():
+                logger.debug(f"Creating the config for {spell_name}")
+                self.spells[spell_name] = EffectContainer()
+                for an_effect in spell_value:
                     for effect_name, value in an_effect.items():
-                        # Is the effect name a valid one?
-                        if effect_name not in self.effects_list.keys():
-                            logger.error("{} not a valid effect name".format(effect_name))
+                        if effect_name not in self.effects_list:
+                            logger.error(f"{effect_name} not a valid effect name")
                             continue
-                        # if it is, let's add to the container
-                        self.spells[a_spell_name].append(self._create_effect(effect_name, value))
-                        logger.debug("{} added to {}".format(effect_name, a_spell_name))
+                        self.spells[spell_name].append(self._create_effect(effect_name, value))
+                        logger.debug(f"{effect_name} added to {spell_name}")
         except (TypeError, AttributeError, IndexError) as e:
-            raise SFXError("Cannot parse config file due to {}".format(e))
-        logger.info("Configuration created with {} spells on it".format(len(self.spells)))
+            raise SFXError(f"Cannot parse config file due to {e}")
+        
+        logger.info(f"Configuration created with {len(self.spells)} spells")
 
     def __getitem__(self, spellname):
         return self.spells[spellname]
 
     def _create_effect(self, effect, effect_value):
         """
-        Given the VALID_EFFECT_NAME constant and the effect variable, creates a valid effect
-        :param effect: a valid effect name as per the EFFECT_LIST keys
-        :param effect_value: the payload
+        Given the valid effect name and its value, create a corresponding effect.
+        :param effect: a valid effect name (from the EFFECTS_LIST keys)
+        :param effect_value: the payload to initialize the effect
         """
-        # As per the effect defilition, effect_value should be a JSONAble string, so:
         if type(effect_value) is not str:
             effect_value = json.dumps(effect_value)
         return self.effects_list[effect](effect_value)
 
     def run(self, spell):
         """
-        Actually runs an EffectContainer for the given spell as key
-        :param spell: str, the spell name, or key
+        Run the effects in the EffectContainer for the given spell.
+        :param spell: str, the name of the spell
         """
-        logger.info("Attempting to run it for {}".format(spell))
-        if spell not in self.spells.keys():
-            logger.error("{} not found in spells list, aborting".format(spell))
+        logger.info(f"Attempting to run {spell}")
+        if spell not in self.spells:
+            logger.error(f"{spell} not found in spells list, aborting")
+            return
         self.spells[spell].run()

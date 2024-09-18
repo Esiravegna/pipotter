@@ -32,7 +32,8 @@ class LightEffect:
         self.strip = None
         self.commands = []  # This will store the parsed commands
         self.default_gokai_colours = [(255, 0, 0), (0, 0, 255), (255, 255, 0), (0, 255, 0), (255, 105, 180), (192, 192, 192)]
-        
+        self.name = "LightEffect"
+
         self._read_json(jsonable_string)
 
     def _read_json(self, jsonable_string):

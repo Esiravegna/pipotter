@@ -23,6 +23,7 @@ class ServoMotor(Effect):
         self.frequency = 50
         self.pwm = None
         self.commands = []
+        self.name = "ServomotorEffect"
 
         logger.info("Initializing ServoMotor")
         self._read_json(jsonable_string)
