@@ -2,7 +2,7 @@
 
 Just a very simple EfficientNetB0 that reads the wand movements.
 
-Please do refer to the corpus_generator. For training, resort to  [TFLite Model Maker Docker Image](https://www.data-mining.co.nz/news/2021-10-06-tflite-model-maker/)
+Please do refer to the corpus_generator for how to build the corpus. For training, resort to  [TFLite Model Maker Docker Image](https://www.data-mining.co.nz/news/2021-10-06-tflite-model-maker/)
 
 ## Usage
 
