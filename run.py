@@ -36,11 +36,10 @@ from core.controller import PiPotterController
               help='Video source to use : picamera or loop')
 @click.option('--video-file', help='Video file to loop')
 @click.option('--video-file', help='Video file to loop')
-@click.option('--draw-windows/--no-draw-windows', default=False, help='Draw windows from CV2')
 @click.option('--save_images_directory', help='Store the detected movements as images in the passed directory')
 @click.option('--config-file', help='Where to read the configuration file. Defaults to ./config.json',
               default='./config.json')
-def run_command(video_source, video_file, draw_windows, save_images_directory, config_file):
+def run_command(video_source, video_file, save_images_directory, config_file):
     """
     The main method
     """
@@ -53,7 +52,7 @@ def run_command(video_source, video_file, draw_windows, save_images_directory, c
         arguments = {'camera': cam}
     if save_images_directory:
         arguments['save_images_directory'] = save_images_directory
-    controller = PiPotterController(video_source_name=video_source, draw_windows=draw_windows,
+    controller = PiPotterController(video_source_name=video_source,
                                     configuration_file=config_file, **arguments)
     controller.run()
 

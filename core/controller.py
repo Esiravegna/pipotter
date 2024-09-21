@@ -8,7 +8,7 @@ from os.path import join
 
 from media.video_source import VALID_SOURCES, looper, picamera
 from wand.detector import WandDetector
-from wand.spell_net.model import SpellNet
+from wand.spell_net2.model import SpellNet
 from sfx.factory import EffectFactory
 from core.config import settings
 from core.utils import pad_to_square
@@ -21,7 +21,7 @@ SECONDS_TO_DRAW = settings['PIPOTTER_SECONDS_TO_DRAW']
 app = Flask(__name__)
 
 class PiPotterController(object):
-    def __init__(self, video_source_name, configuration_file, draw_windows=False, **kwargs):
+    def __init__(self, video_source_name, configuration_file, **kwargs):
         """
         Initialize PiPotter controller
         """
@@ -44,11 +44,10 @@ class PiPotterController(object):
             except KeyError:
                 raise Exception("For looper source, a valid 'video_file' parameter should be provided")
         
-        self.draw_windows = draw_windows
         self.save_images_directory = kwargs.get('save_images_directory', None)
 
         logger.debug("Initializing wand detector")
-        self.wand_detector = WandDetector(video=self.video, draw_windows=draw_windows)
+        self.wand_detector = WandDetector(video=self.video)
         
         logger.debug("Initializing SpellNet")
         self.spell_net = SpellNet()
