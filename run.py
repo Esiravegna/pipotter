@@ -10,26 +10,22 @@ logger = logging.getLogger(__name__)
 # As per several picamera recommendations, this object has to be created first
 cam = False
 try:
-    from picamera import PiCamera
-    cam = PiCamera()
-    cam.resolution = (640, 480)
-    cam.framerate = 25
-    logger.info("Warning up camera...")
-    sleep(2)
-    cam,brightness = 47
-    cam.shutter_speed = cam.exposure_speed
-    cam.exposure_mode = 'off'
-    g = cam.awb_gains
-    cam.awb_mode = 'off'
-    cam.awb_gains = g
+    from picamera2 import Picamera2
+    cam = Picamera2()
+    cam.configure(cam.create_still_configuration())  # Configure for still images
+    cam.set_controls({"ExposureMode": "off", "Brightness": 47})  # Set brightness
+    cam.start()  # Start the camera
+    logger.info("Warming up camera...")
+    sleep(5)  # Allo the camera to warm up
+    # Set shutter speed and AWB settings
+    shutter_speed = cam.controls.exposure_speed
+    cam.set_controls({"ShutterSpeed": shutter_speed, "AwbMode": "off", "AwbGain": cam.controls.awb_gains})
     logger.info("DING! Camera ready!")
 except Exception as e:
     logger.error("Cannot create Camera. If you're using a video as input, dismiss this. Otherwise, ☢ {}".format(e))
 import click
 
 from core.controller import PiPotterController
-
-
 
 @click.command()
 @click.option('--video-source', required=True, type=click.Choice(['looper', 'picamera']),
