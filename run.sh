@@ -1,26 +1,19 @@
-#!/usr/bin/env bash
-# check if conda installed
-# File containing the basic requirements
+#!/bin/bash
+ENV_DIR="env"  
+if [ ! -d "$ENV_DIR" ]; then
+    echo "Error: Virtual environment '$ENV_DIR' does not exist ❌"
+    exit 1
+fi
+echo "Virtual environment '$ENV_DIR' : ✅"
+echo "Info: Activating virtual environment..."
+source "$ENV_DIR/bin/activate"
+echo "✅"
 REQUIREMENTS_FILE="requirements.txt"
+if [ ! -f "$REQUIREMENTS_FILE" ]; then
+    echo "'$REQUIREMENTS_FILE' not found ❌"
+    exit 1
+fi
+echo "Info: Found requirements file '$REQUIREMENTS_FILE' ✅"
+python run.py "$@"
+deactivate
 
-# Function to check if a Python package is installed
-check_and_install() {
-    PACKAGE_NAME=$1
-    PACKAGE_VERSION=$2
-
-    # Check if the package is installed
-    INSTALLED_VERSION=$(pip3 show "$PACKAGE_NAME" | grep Version | awk '{print $2}')
-
-    if [ "$INSTALLED_VERSION" == "$PACKAGE_VERSION" ]; then
-        echo "$PACKAGE_NAME==$PACKAGE_VERSION is already installed."
-    else
-        echo "Installing $PACKAGE_NAME==$PACKAGE_VERSION..."
-        pip3 install "$PACKAGE_NAME==$PACKAGE_VERSION"
-    fi
-}
-
-# Loop through the requirements.txt and check each package
-while IFS== read -r PACKAGE VERSION; do
-    check_and_install "$PACKAGE" "$VERSION"
-done < "$REQUIREMENTS_FILE"
-python3 run.py "$@"

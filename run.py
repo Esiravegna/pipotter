@@ -1,35 +1,36 @@
 import logging
+import click
+from sys import exit
+
 from core.log import configure_log
 from core.config import settings
-from sys import exit
-from time import sleep
+
 configure_log(settings['PIPOTTER_LOGLEVEL'])
 logger = logging.getLogger(__name__)
 
-# Due to memory constrains, we need to do this HORRID HACK. 
-# As per several picamera recommendations, this object has to be created first
-cam = False
-try:
-    from picamera2 import Picamera2
-    cam = Picamera2()
-    cam.configure(cam.create_still_configuration())  # Configure for still images
-    cam.set_controls({"ExposureMode": "off", "Brightness": 47})  # Set brightness
-    cam.start()  # Start the camera
-    logger.info("Warming up camera...")
-    sleep(5)  # Allo the camera to warm up
-    # Set shutter speed and AWB settings
-    shutter_speed = cam.controls.exposure_speed
-    cam.set_controls({"ShutterSpeed": shutter_speed, "AwbMode": "off", "AwbGain": cam.controls.awb_gains})
-    logger.info("DING! Camera ready!")
-except Exception as e:
-    logger.error("Cannot create Camera. If you're using a video as input, dismiss this. Otherwise, ☢ {}".format(e))
-import click
 
 from core.controller import PiPotterController
 
+BANNER = """
+\n
+ ███████████   ███  ███████████            █████     █████                          █████ █████
+░░███░░░░░███ ░░░  ░░███░░░░░███          ░░███     ░░███                          ░░███ ░░███ 
+ ░███    ░███ ████  ░███    ░███  ██████  ███████   ███████    ██████  ████████     ░███  ░███ 
+ ░██████████ ░░███  ░██████████  ███░░███░░░███░   ░░░███░    ███░░███░░███░░███    ░███  ░███ 
+ ░███░░░░░░   ░███  ░███░░░░░░  ░███ ░███  ░███      ░███    ░███████  ░███ ░░░     ░███  ░███ 
+ ░███         ░███  ░███        ░███ ░███  ░███ ███  ░███ ███░███░░░   ░███         ░███  ░███ 
+ █████        █████ █████       ░░██████   ░░█████   ░░█████ ░░██████  █████        █████ █████
+░░░░░        ░░░░░ ░░░░░         ░░░░░░     ░░░░░     ░░░░░   ░░░░░░  ░░░░░        ░░░░░ ░░░░░ 
+                                                                                               
+                                                                                               
+\n                                                                                               
+"""
+
+print(BANNER)
+
 @click.command()
 @click.option('--video-source', required=True, type=click.Choice(['looper', 'picamera']),
-              help='Video source to use : picamera or loop')
+              help='Video source to use : picamera or loop', default='picamera')
 @click.option('--video-file', help='Video file to loop')
 @click.option('--video-file', help='Video file to loop')
 @click.option('--save_images_directory', help='Store the detected movements as images in the passed directory')
@@ -43,9 +44,7 @@ def run_command(video_source, video_file, save_images_directory, config_file):
     if video_source == 'looper':
         arguments = {'video_file': video_file}
     elif video_source == 'picamera':
-        if not cam:
-            raise Exception("Camera object not initialized, cannot continue")
-        arguments = {'camera': cam}
+        arguments = {'camera': True}
     if save_images_directory:
         arguments['save_images_directory'] = save_images_directory
     controller = PiPotterController(video_source_name=video_source,
@@ -56,6 +55,5 @@ if __name__ == '__main__':
     try:
         run_command()
     except KeyboardInterrupt:
-        cam.close()
         logger.info("Shutting down")
         exit(0)

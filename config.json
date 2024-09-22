@@ -1,7 +1,7 @@
 {
   "arresto_momentum": [
     {
-      "AudioEffect": "./media/audio/arresto_momentum/arresto_momentum.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
     {
       "LightEffect": [
@@ -45,9 +45,6 @@
   ],
   "locomotor": [
     {
-      "AudioEffect": "./media/audio/locomotor/locomotor.mp3"
-    },
-    {
       "LightEffect": [
         {
           "group": 1,
@@ -89,7 +86,7 @@
   ],
   "lumos": [
     {
-      "AudioEffect": "./media/audio/lumos/lumos.wav"
+      "AudioEffect": "./media/audio/lumos_sound_effect.mp3"
     },
     {
       "LightEffect": [
@@ -139,9 +136,6 @@
   ],
   "noctis": [
     {
-      "AudioEffect": "./media/audio/noctis/noctis.wav"
-    },
-    {
       "LightEffect": [
         {
           "group": 1,
@@ -166,9 +160,6 @@
     }
   ],
   "meteojinx": [
-    {
-      "AudioEffect": "./media/audio/meteojinx/meteojinx.mp3"
-    },
     {
       "LightEffect": [
         {
@@ -211,9 +202,6 @@
   ],
   "silencio": [
     {
-      "AudioEffect": "./media/audio/silencio/silencio.wav"
-    },
-    {
       "LightEffect": [
         {
           "group": 1,
@@ -254,13 +242,7 @@
     }
   ],
   "wand_detected": [
-    {
-      "AudioEffect": "./media/audio/wand_detected/wand_detected.mp3"
-    }
   ],
     "pipotter_ready": [
-    {
-      "AudioEffect": "./media/audio/pipotter_ready/pipotter_ready.mp3"
-    }
   ]
 }

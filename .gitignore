@@ -7,9 +7,9 @@ __pycache__/
 
 # Project specific
 *.h264
+*.mp3
 one_shot/
 wand/spell_net/models
-media/*
 saved_sigils/*
 # C extensions
 *.so

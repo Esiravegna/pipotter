@@ -33,8 +33,7 @@ class PiPotterController(object):
         
         if video_source_name == 'picamera':
             try:
-                camera = kwargs['camera']
-                self.video = picamera(camera, flip=flip)
+                self.video = picamera(flip=flip)
             except KeyError:
                 raise Exception("For picamera source, a valid 'camera' parameter should be provided")
         elif video_source_name == 'looper':
