@@ -1,11 +1,10 @@
 import logging
-import threading
 import time
 import queue
 import cv2
 from flask import Flask, Response
 from os.path import join
-
+import threading
 from media.video_source import VALID_SOURCES, looper, picamera
 from wand.detector import WandDetector
 from wand.spell_net2.model import SpellNet
@@ -33,6 +32,7 @@ class PiPotterController(object):
         
         if video_source_name == 'picamera':
             try:
+                camera = kwargs['camera']
                 self.video = picamera(flip=flip)
             except KeyError:
                 raise Exception("For picamera source, a valid 'camera' parameter should be provided")
@@ -42,7 +42,7 @@ class PiPotterController(object):
                 self.video = looper(video_file, flip=flip)
             except KeyError:
                 raise Exception("For looper source, a valid 'video_file' parameter should be provided")
-        
+
         self.save_images_directory = kwargs.get('save_images_directory', None)
 
         logger.debug("Initializing wand detector")
@@ -58,19 +58,58 @@ class PiPotterController(object):
         logger.info("Initialization complete. Ready to go!")
         self.effects[settings['PIPOTTER_READY_SFX']].run()
 
-        # Threading setup
+        # Queue for video frames
         self.frame_queue = queue.Queue(maxsize=5)
-        self.spell_queue = queue.Queue()
         self.stop_event = threading.Event()
+
+        # Bind routes to instance methods using add_url_rule
+        app.add_url_rule('/video_feed', 'video_feed', self.video_feed)
+        app.add_url_rule('/sigil_feed', 'sigil_feed', self.sigil_feed)
 
         # Start Flask server in a thread
         self.flask_thread = threading.Thread(target=self._start_flask_server)
         self.flask_thread.daemon = True
         self.flask_thread.start()
 
+    def run(self):
+        """Runs the PiPotter controller."""
+        logger.info("Starting PiPotter...")
+        try:
+            while True:
+                ret, frame = self.video.read()  
+                if ret and frame is not None:
+                    self.wand_detector.latest_wand_frame = frame  # Store for streaming
+                    self.frame_queue.put(frame)  # Put the frame in the queue
+                    # Perform wand detection and effect execution
+                    self.wand_detection()  
+                time.sleep(0.1)  # Small delay to prevent busy-waiting
+        except KeyboardInterrupt:
+            logger.info("Shutting down PiPotter...")
+            self.stop_event.set()
+        finally:
+            self._terminate()
+
+    def wand_detection(self):
+        """Process video frames and classify spells synchronously."""
+        if not self.frame_queue.empty():
+            frame = self.frame_queue.get()
+            self.wand_detector.read_wand(frame)
+
+            if self.wand_detector.maybe_a_spell.shape[0]:
+                spell_name = self._process_sigil(self.wand_detector.maybe_a_spell)
+                self._accio_spell(spell_name) 
+
     def _start_flask_server(self):
         """Start Flask server for real-time monitoring."""
         app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
+
+    def video_feed(self):
+        """Stream the raw video feed."""
+        return Response(self._frame_generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    def sigil_feed(self):
+        """Stream the sigil detection feed."""
+        return Response(self._sigil_frame_generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     def _frame_generator(self):
         """Generate frames for the camera feed."""
@@ -91,72 +130,6 @@ class PiPotterController(object):
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
             time.sleep(0.1)
-
-    @app.route('/video_feed')
-    def video_feed():
-        """Stream the raw video feed."""
-        return Response(self._frame_generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-    @app.route('/sigil_feed')
-    def sigil_feed():
-        """Stream the sigil detection feed."""
-        return Response(self._sigil_frame_generator(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-    def video_capture_thread(self):
-        """Thread to capture video frames continuously."""
-        while not self.stop_event.is_set():
-            frame = self.video.read()
-            if frame is not None:
-                self.wand_detector.latest_wand_frame = frame  # Store the latest frame for streaming
-                try:
-                    self.frame_queue.put(frame, timeout=1)
-                except queue.Full:
-                    pass
-
-    def wand_detection_thread(self):
-        """Thread to process video frames and classify spells."""
-        while not self.stop_event.is_set():
-            try:
-                frame = self.frame_queue.get(timeout=1)
-                self.wand_detector.read_wand(frame)
-
-                if self.wand_detector.maybe_a_spell.shape[0]:
-                    spell_name = self._process_sigil(self.wand_detector.maybe_a_spell)
-                    self.spell_queue.put(spell_name)
-            except queue.Empty:
-                pass
-
-    def effect_execution_thread(self):
-        """Thread to execute effects for classified spells."""
-        while not self.stop_event.is_set():
-            try:
-                spell_name = self.spell_queue.get(timeout=1)
-                self._accio_spell(spell_name)
-            except queue.Empty:
-                pass
-
-    def run(self):
-        """Runs the PiPotter controller."""
-        logger.info("Starting PiPotter...")
-        video_thread = threading.Thread(target=self.video_capture_thread)
-        wand_thread = threading.Thread(target=self.wand_detection_thread)
-        effect_thread = threading.Thread(target=self.effect_execution_thread)
-
-        video_thread.start()
-        wand_thread.start()
-        effect_thread.start()
-
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            logger.info("Shutting down PiPotter...")
-            self.stop_event.set()
-            video_thread.join()
-            wand_thread.join()
-            effect_thread.join()
-        finally:
-            self._terminate()
 
     def _terminate(self):
         """Internal. Closes all the things"""
@@ -184,6 +157,6 @@ class PiPotterController(object):
         """Runs the effect for the given spell."""
         if spell_name != settings['PIPOTTER_NO_SPELL_LABEL']:
             logger.info(f"Running effect for spell {spell_name}")
-            self.effects[spell_name].run()
+            self.effects[spell_name].run()  
         else:
             logger.info('No spell detected')

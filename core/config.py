@@ -17,7 +17,7 @@ settings = {
     # Threshold to trigger a positive detection. If it is lower than this, we will not trigger an effect.
     # This should be at least 1/the number of possible spells. In this case, we've six. please take a look at
     # the media/spell_net2/spell_net.ipynb file
-    'PIPOTTER_THRESHOLD_TRIGGER': float(1/6),
+    'PIPOTTER_THRESHOLD_TRIGGER': 0.75,
     # How do we cann a label for no spell detected? defaults to background. It cannot be any of the spells already existing
     'PIPOTTER_NO_SPELL_LABEL': getenv('PIPOTTER_NO_SPELL_LABEL', 'background'),
     # Optionally, we will use a remote SpellNET server?

@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import tflite_runtime.interpreter as tflite  # Use tflite_runtime for embedded systems
-
+import time
 from core.config import settings
 from core.utils import pad_to_square
 
@@ -83,13 +83,16 @@ class SpellNet(object):
         :return: dictionary of {class1: prob1, ..., classN: probN}
         """
         logger.debug("Using local TFLite model")
-
+        start_time = time.time()
         # Preprocess the image: resize and normalize for EfficientNet B0
         input_data = self._preprocess_image(image)
-
+        end_time = time.time()
+        logger.info(f"Preprocessing time: {(end_time - start_time) * 1000:.2f} ms") 
+        logger.debug(f"got an image of shape {input_data.shape}")
         # Add batch dimension and ensure the data type matches the model's input type
+        start_time = time.time()
         input_data = np.expand_dims(input_data, axis=0).astype(np.float32)
-
+        logger.debug(f"Expected shape {self.input_details[0]['shape']}, got {input_data.shape}")
         # Set the input tensor for the interpreter
         self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
 
@@ -98,8 +101,10 @@ class SpellNet(object):
 
         # Get the output tensor (predictions)
         output_data = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
-
+        end_time = time.time()
+        logger.info(f"Inference time: {(end_time - start_time) * 1000:.2f} ms") 
+      
         # Create the results dictionary with class names and probabilities
         results = {self.labels[i]: output_data[i] for i in range(len(self.labels))}
-
+        logger.info(f"got this prediction: {results}")
         return results

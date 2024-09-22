@@ -2,7 +2,7 @@
 
 # Set the test folder path
 test_folder="test/"
-
+source env/bin/activate
 # Run pytest with pytest-pythonpath
-python3 -m pytest $test_folder
+python -m pytest $test_folder
 

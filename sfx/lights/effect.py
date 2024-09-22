@@ -6,10 +6,11 @@ import board
 import neopixel
 import numpy as np
 from core.error import SFXError
+from sfx.effect import Effect
 
 logger = logging.getLogger(__name__)
 
-class LightEffect:
+class LightEffect(Effect):
     """
     A NeoPixel-based effect for controlling addressable LEDs (like WS2812).
     
@@ -88,6 +89,10 @@ class LightEffect:
                     brightness = payload.get("brightness", 100)
                     self.commands.append(('fade_up', brightness))
 
+                elif cmd_type == "fade_down":
+                    brightness = payload.get("brightness", 0)
+                    self.commands.append(('fade_down', brightness))
+
                 elif cmd_type == "color":
                     led_index = payload.get("led", 0)
                     color = payload.get("color", "#FFFFFF")
@@ -100,8 +105,10 @@ class LightEffect:
 
                 elif cmd_type == "off":
                     led_index = payload.get("led", 0)
-                    self.commands.append(('off', led_index))
-
+                    
+                elif cmd_type == "wait":
+                    wait_time = payload.get("wait", 0)
+                    self.commands.append(('wait', wait_time))
                 else:
                     logger.warning(f"Unknown command: {cmd_type}")
         except Exception as e:
@@ -197,7 +204,12 @@ class LightEffect:
                     brightness = command[1] / 100.0
                     self.strip.brightness = brightness
                     self.strip.show()
-
+                    
+                elif action == 'fade_down':
+                    brightness = command[1] / 100.0
+                    self.strip.brightness = brightness
+                    self.strip.show()
+                    
                 elif action == 'color':
                     led_index, color_rgb = command[1], command[2]
                     self.strip[led_index] = color_rgb
