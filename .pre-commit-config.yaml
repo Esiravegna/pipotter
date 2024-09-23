@@ -11,7 +11,7 @@ repos:
         stages: [push]
         types: [python]
         name: pytest-check
-        entry: ./env/bin/pytest tests/
+        entry: ./env/bin/pytest test/
         language: system
         pass_filenames: false
         always_run: true
