@@ -9,7 +9,7 @@ repos:
     hooks:
       - id: run-tests
         name: Run unit tests
-        entry: pytest
+        entry: pytest test/
         language: system
         always_run: true
         stages: [push]
