@@ -7,6 +7,7 @@ from sfx.effect import Effect
 
 logger = logging.getLogger(__name__)
 
+
 class ServoMotor(Effect):
     """
     A class to control a servo motor using GPIO and PWM, initialized from JSON configuration.
@@ -15,7 +16,7 @@ class ServoMotor(Effect):
     def __init__(self, jsonable_string):
         """
         Initialize the ServoMotor class from a JSON string.
-        
+
         :param jsonable_string: A JSON string with servo configuration and commands.
         """
         super().__init__()
@@ -38,7 +39,7 @@ class ServoMotor(Effect):
         except ValueError as e:
             logger.error(f"Invalid JSON configuration: {e}")
             raise SFXError(f"Invalid JSON configuration: {e}")
-        
+
         try:
             self.gpio_pin = config["gpio_pin"]
             self.frequency = config.get("frequency", 50)
@@ -50,7 +51,9 @@ class ServoMotor(Effect):
             # Initialize PWM for servo motor
             self.pwm = GPIO.PWM(self.gpio_pin, self.frequency)
             self.pwm.start(0)
-            logger.info(f"ServoMotor initialized on pin {self.gpio_pin} with frequency {self.frequency}Hz")
+            logger.info(
+                f"ServoMotor initialized on pin {self.gpio_pin} with frequency {self.frequency}Hz"
+            )
 
             # Parse commands
             logger.info("Parsing ServoMotor commands")
@@ -60,11 +63,11 @@ class ServoMotor(Effect):
 
                 if cmd_type == "set_angle":
                     angle = payload.get("angle", 0)
-                    self.commands.append(('set_angle', angle))
+                    self.commands.append(("set_angle", angle))
                     logger.debug(f"Command added: Set angle to {angle} degrees")
 
                 elif cmd_type == "stop":
-                    self.commands.append(('stop',))
+                    self.commands.append(("stop",))
                     logger.debug("Command added: Stop ServoMotor")
 
                 else:

@@ -2,6 +2,7 @@ import json
 import logging
 
 from core.error import SFXError
+
 # Should you add new effects, import them below and add to the available effects dict
 from sfx.audio.effect import AudioEffect
 from sfx.effect_container import EffectContainer
@@ -11,18 +12,19 @@ from sfx.servomotor.effect import ServoMotor
 
 logger = logging.getLogger(__name__)
 
+
 class EffectFactory(object):
     """
     Given a configuration file containing names and effects, this class creates objects that can generate all the specified effects.
     This object is tightly coupled to the sfx module: to add new effects, update the EFFECTS_LIST and the methods of this class.
-    
+
     Usage:
         ```python
         from sfx.factory import EffectFactory
         effects = EffectFactory('/path/to/the/spells.json')
         effects.run('alohomora')
         ```
-    
+
     Example JSON config:
         ```json
         {
@@ -77,23 +79,23 @@ class EffectFactory(object):
         if effects_list is None:
             # Default effects list includes AudioEffect, LightEffect, LEDControl, and ServoMotor
             self.effects_list = {
-                'AudioEffect': AudioEffect,
-                'LightEffect': LightEffect,
-                'LEDControl': LEDControl,
-                'ServoMotor': ServoMotor
+                "AudioEffect": AudioEffect,
+                "LightEffect": LightEffect,
+                "LEDControl": LEDControl,
+                "ServoMotor": ServoMotor,
             }
         else:
             self.effects_list = effects_list
 
         try:
-            with open(config_file, 'r') as fp:
+            with open(config_file, "r") as fp:
                 str_json = fp.read()
                 config = json.loads(str_json)
         except FileNotFoundError as e:
             raise SFXError(f"Unable to find {config_file}: {e}")
         except json.decoder.JSONDecodeError as e:
             raise SFXError(f"{config_file} does not contain a valid JSON file: {e}")
-        
+
         self.spells = {}
 
         try:
@@ -105,11 +107,13 @@ class EffectFactory(object):
                         if effect_name not in self.effects_list:
                             logger.error(f"{effect_name} not a valid effect name")
                             continue
-                        self.spells[spell_name].append(self._create_effect(effect_name, value))
+                        self.spells[spell_name].append(
+                            self._create_effect(effect_name, value)
+                        )
                         logger.debug(f"{effect_name} added to {spell_name}")
         except (TypeError, AttributeError, IndexError) as e:
             raise SFXError(f"Cannot parse config file due to {e}")
-        
+
         logger.info(f"Configuration created with {len(self.spells)} spells")
 
     def __getitem__(self, spellname):

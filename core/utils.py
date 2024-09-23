@@ -5,7 +5,7 @@ import numpy as np
 from core.config import settings
 
 # The default image size. MUST BE the same size you trained SpellNet
-side = settings['PIPOTTER_SIDE_SPELL_NET']
+side = settings["PIPOTTER_SIDE_SPELL_NET"]
 
 
 def pad_to_square(im, thumbnail_size=side, color=[0, 0, 0]):
@@ -19,7 +19,9 @@ def pad_to_square(im, thumbnail_size=side, color=[0, 0, 0]):
     # If the image is grayscale, convert it to RGB
     if len(im.shape) == 2:
         im = cv2.cvtColor(im, cv2.COLOR_GRAY2RGB)
-    squared = np.zeros([side, side, 3], np.uint8) # In case we receive an exotic image size
+    squared = np.zeros(
+        [side, side, 3], np.uint8
+    )  # In case we receive an exotic image size
     old_size = im.shape[:2]  # old_size is in (height, width) format
     ratio = float(thumbnail_size) / max(old_size)
     new_size = tuple([int(x * ratio) for x in old_size])
@@ -32,7 +34,9 @@ def pad_to_square(im, thumbnail_size=side, color=[0, 0, 0]):
         top, bottom = delta_h // 2, delta_h - (delta_h // 2)
         left, right = delta_w // 2, delta_w - (delta_w // 2)
 
-        squared = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
+        squared = cv2.copyMakeBorder(
+            im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
+        )
     except cv2.error:
         pass
     return squared

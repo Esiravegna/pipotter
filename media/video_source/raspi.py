@@ -5,6 +5,7 @@ from threading import Thread
 
 logger = logging.getLogger(__name__)
 
+
 class PiCameraCV(object):
     """
     An OpenCV VideoCapture wrapper for PiCamera2 for headless systems, using grayscale images.
@@ -18,11 +19,9 @@ class PiCameraCV(object):
         :param flip: list of indices to run the cv2 flip command. Empty to not run anything
         """
         self.camera = Picamera2()
-        config = self.camera.create_still_configuration(
-            main={"size": resolution}
-        )
+        config = self.camera.create_still_configuration(main={"size": resolution})
         self.camera.configure(config)
-        self.camera.set_controls({'Saturation': 0})
+        self.camera.set_controls({"Saturation": 0})
         self.camera.start()
         self.flip = flip
         self.resolution = resolution
@@ -38,12 +37,13 @@ class PiCameraCV(object):
             # Capture an image
             self.frame = self.camera.capture_array()
             logger.debug(f"Captured frame shape: {self.frame.shape}")
+
     def read(self):
         """
         Read a frame from the camera.
         :return: (boolean, cv2Image) captured from the camera, or False, None on error as per the read cv2 VideoCapture command
         """
-        frame, ret =  None, False
+        frame, ret = None, False
         if self.frame is None:
             logger.error("self.frame is None, waiting for camera update.")
         else:
@@ -54,7 +54,9 @@ class PiCameraCV(object):
                     frame = cv2.flip(frame, 1)
                 ret = True
             except Exception as e:
-                logger.error("Unable to read from PiCamera due to {} reading {}".format(e, frame))    
+                logger.error(
+                    "Unable to read from PiCamera due to {} reading {}".format(e, frame)
+                )
         return ret, frame
 
     def end(self):

@@ -1,4 +1,3 @@
-
 import logging
 from os.path import exists
 import cv2
@@ -6,6 +5,7 @@ from threading import Thread
 
 from core.error import MediaError
 from media.video_source.video_source import VideoSource
+
 logger = logging.getLogger(__name__)
 
 
@@ -13,6 +13,7 @@ class VideoLooper(VideoSource):
     """
     Loops from a video using opencv
     """
+
     def __init__(self, videofile, flip=[], max_width=800):
         """
         The constructor
@@ -22,7 +23,9 @@ class VideoLooper(VideoSource):
         """
         if not exists(videofile):
             raise MediaError("Unable to find {}".format(videofile))
-        logger.debug("Looping {}.. Getting number of frames, please wait".format(videofile))
+        logger.debug(
+            "Looping {}.. Getting number of frames, please wait".format(videofile)
+        )
         self.video = cv2.VideoCapture(videofile)
         self.source = videofile
         self.frame_counter = 0
@@ -36,7 +39,7 @@ class VideoLooper(VideoSource):
         Frames counting is really buggy, got to do this old fashioned.
         :param: video, a valid opencv2 video
         :return: int, the number of frames
-        """ 
+        """
         total = 0
         # loop over the frames of the video
         while True:
@@ -47,7 +50,7 @@ class VideoLooper(VideoSource):
             if not grabbed:
                 break
             # increment the total number of frames read
-            total += 1 
+            total += 1
         return total
 
     def _read(self):
@@ -67,7 +70,7 @@ class VideoLooper(VideoSource):
         if self.frame_counter >= self.total_frames:
             logger.debug("Looping back {} to zero".format(self.source))
             self.video.release()
-            self.video  = cv2.VideoCapture(self.source)
+            self.video = cv2.VideoCapture(self.source)
             self.frame_counter = 0
             ret, frame = self._read()
         if ret:

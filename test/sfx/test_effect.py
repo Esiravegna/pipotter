@@ -7,11 +7,13 @@ from sfx.effect_container import EffectContainer
 def this_is_an_effect():
     return Effect()
 
+
 @pytest.fixture(scope="module")
 def this_is_a_working_effect():
     class AWorkignEffect(Effect):
         def run(self, *args, **kwargs):
             return True
+
     return AWorkignEffect()
 
 

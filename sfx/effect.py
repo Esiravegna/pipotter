@@ -5,14 +5,15 @@ class Effect(object):
      or whatnot.
     Mind the submodules under this folder for that.
     """
-    name = "BASE_OBJECT" # The name the Effect has, for identifying purposes
+
+    name = "BASE_OBJECT"  # The name the Effect has, for identifying purposes
 
     def run(self, *args, **kwargs):
         """
         The must-be-implemented method for all the effects being created
         :param args: generic list of arguments that may be needed
         :param kwargs: generic dict of arguments that may be needed
-        :return: 
+        :return:
         """
         raise NotImplemented
 

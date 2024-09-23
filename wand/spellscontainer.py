@@ -18,7 +18,9 @@ class SpellSigil(object):
         :param: right (int) the x2 value
         :param: bottom (int) the y2 value
         """
-        f = lambda x: max(0, x)  # no negatives allowed. Somehow and for unknown reasons opencv2 sometimes produce some
+        f = lambda x: max(
+            0, x
+        )  # no negatives allowed. Somehow and for unknown reasons opencv2 sometimes produce some
         new_point = [f(left), f(top), f(right), f(bottom)]
         if self.history:
             # We will not add the same point, useful to filter static points
@@ -34,7 +36,9 @@ class SpellSigil(object):
         returns the left, top, right, bottom bounding box
         """
         if not len(self.history):
-            raise ValueError("The bounding boxes cannot be extracted from an empty history")
+            raise ValueError(
+                "The bounding boxes cannot be extracted from an empty history"
+            )
         matrix = np.array(self.history)
         left, top, _, _ = matrix.min(axis=0)
         _, _, right, bottom = matrix.max(axis=0)
@@ -93,7 +97,6 @@ class SpellsContainer(object):
         return previous
 
     def get_box(self):
-
         """
         Returns the bounding boxes of the longest sigil, that should be the one being drawn
         the rationale here is that a wand being moved will produce a more complex, longer line than
@@ -101,7 +104,7 @@ class SpellsContainer(object):
         returns the left, top, right, bottom bounding box
         """
         if not len(self.sigils):
-            raise ValueError('Cannot proceed with an empty sigils history')
+            raise ValueError("Cannot proceed with an empty sigils history")
         return self._longest_vector(self.sigils).get_box()
 
     def _longest_vector(self, vector):

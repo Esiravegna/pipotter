@@ -4,6 +4,7 @@ from errno import ENOENT
 import subprocess
 from core.error import SFXError
 from core.config import settings
+
 log = logging.getLogger(__name__)
 
 
@@ -11,6 +12,7 @@ class Mediaplayer(object):
     """
     Just a media player using mplayer
     """
+
     player = None
 
     def play(self, file_to_play):
@@ -23,9 +25,14 @@ class Mediaplayer(object):
             raise SFXError("Unable to reproduce {}".format(file_to_play))
         try:
             log.info("calling mplayer")
-            self.player = subprocess.Popen(["mplayer", file_to_play] + settings['PIPOTTER_EXTRA_AUDIO_COMMANDS'], stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.player = subprocess.Popen(
+                ["mplayer", file_to_play] + settings["PIPOTTER_EXTRA_AUDIO_COMMANDS"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
         except OSError as e:
-            if e.errno==ENOENT:
+            if e.errno == ENOENT:
                 raise SFXError("Check that mplayer is installed: {}".format(e))
             else:
                 raise SFXError("Error when calling mplayer: {}".format(e))

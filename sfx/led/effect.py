@@ -6,6 +6,7 @@ from sfx.effect import Effect
 
 logger = logging.getLogger(__name__)
 
+
 class LEDControl(Effect):
     """
     A class to control individual LEDs connected to GPIO pins via a JSON-based configuration.
@@ -14,7 +15,7 @@ class LEDControl(Effect):
     def __init__(self, jsonable_string):
         """
         Initialize the LEDControl class from a JSON string.
-        
+
         :param jsonable_string: A JSON string with the LED configuration and commands.
         """
         super().__init__()
@@ -36,7 +37,7 @@ class LEDControl(Effect):
         except ValueError as e:
             logger.error(f"Invalid JSON configuration: {e}")
             raise SFXError(f"Invalid JSON configuration: {e}")
-        
+
         try:
             led_pins = config["led_pins"]
             self.use_pwm = config.get("use_pwm", False)
@@ -63,19 +64,21 @@ class LEDControl(Effect):
 
                 if cmd_type == "turn_on":
                     led = payload.get("led")
-                    self.commands.append(('turn_on', led))
+                    self.commands.append(("turn_on", led))
                     logger.debug(f"Command added: Turn on LED {led}")
 
                 elif cmd_type == "turn_off":
                     led = payload.get("led")
-                    self.commands.append(('turn_off', led))
+                    self.commands.append(("turn_off", led))
                     logger.debug(f"Command added: Turn off LED {led}")
 
                 elif cmd_type == "set_brightness":
                     led = payload.get("led")
                     brightness = payload.get("brightness", 100)
-                    self.commands.append(('set_brightness', led, brightness))
-                    logger.debug(f"Command added: Set brightness of LED {led} to {brightness}%")
+                    self.commands.append(("set_brightness", led, brightness))
+                    logger.debug(
+                        f"Command added: Set brightness of LED {led} to {brightness}%"
+                    )
 
                 else:
                     logger.warning(f"Unknown command: {cmd_type}")
