@@ -7,13 +7,7 @@ fi
 echo "Virtual environment '$ENV_DIR' : ✅"
 echo "Info: Activating virtual environment..."
 source "$ENV_DIR/bin/activate"
-echo "✅"
-REQUIREMENTS_FILE="requirements.txt"
-if [ ! -f "$REQUIREMENTS_FILE" ]; then
-    echo "'$REQUIREMENTS_FILE' not found ❌"
-    exit 1
-fi
-echo "Info: Found requirements file '$REQUIREMENTS_FILE' ✅"
+echo "...✅"
 python run.py "$@"
 deactivate
 

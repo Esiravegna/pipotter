@@ -22,6 +22,17 @@ class PiCameraCV(object):
         config = self.camera.create_still_configuration(main={"size": resolution})
         self.camera.configure(config)
         self.camera.set_controls({"Saturation": 0})
+        self.camera.set_controls(
+            {
+                "AeEnable": True,
+                # "ExposureTime": 1000,      # Short exposure time
+                # "AnalogueGain": 0,         # Low gain for reduced sensitivity
+                "AwbEnable": False,  # Disable auto white balance
+                "ColourGains": (1.5, 1.0),  # , # Adjust gains for IR sensitivity
+                # "Brightness": 0.3,         # Lower brightness to reduce overall exposure
+                # "FrameDurationLimits": (30000, 30000)  # Set frame duration to control framerate
+            }
+        )
         self.camera.start()
         self.flip = flip
         self.resolution = resolution

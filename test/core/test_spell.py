@@ -1,6 +1,7 @@
 import pytest
+from unittest.mock import patch
 
-from wand.spellscontainer import SpellsContainer
+from wand.spellscontainer import SpellsContainer, SpellSigil
 
 
 @pytest.fixture(scope="module")
@@ -61,3 +62,96 @@ def test_all_the_same_sigils():
         for a_dot in item:
             spells[i] = a_dot
     assert spells.get_box() == (342, 192, 368, 221)
+
+
+# Test cases for the SpellSigil class
+class TestSpellSigil:
+
+    def test_add_line(self):
+        sigil = SpellSigil()
+        assert len(sigil) == 0
+
+        sigil.add(10, 20, 30, 40)
+        assert len(sigil) == 1
+        assert sigil.history == [[10, 20, 30, 40]]
+
+    def test_no_duplicate_lines(self):
+        sigil = SpellSigil()
+        sigil.add(10, 20, 30, 40)
+        sigil.add(10, 20, 30, 40)  # Adding the same line should not increase history
+        assert len(sigil) == 1
+
+    def test_negative_coordinates_handling(self):
+        sigil = SpellSigil()
+        sigil.add(-10, -20, 30, 40)
+        assert sigil.history == [
+            [0, 0, 30, 40]
+        ]  # Negative values should be clipped to 0
+
+    def test_get_box_empty_history(self):
+        sigil = SpellSigil()
+        with pytest.raises(
+            ValueError,
+            match="The bounding boxes cannot be extracted from an empty history",
+        ):
+            sigil.get_box()
+
+    def test_get_box(self):
+        sigil = SpellSigil(pixels_margin=5)
+        sigil.add(10, 20, 30, 40)
+        sigil.add(15, 25, 35, 45)
+        assert sigil.get_box() == (5, 15, 40, 50)  # Bounding box with margin
+
+
+# Test cases for the SpellsContainer class
+class TestSpellsContainer:
+
+    @pytest.fixture
+    def container(self):
+        return SpellsContainer(expiration_time=5)
+
+    def test_add_sigil(self, container):
+        container["spell1"] = (10, 20, 30, 40)
+        assert len(container) == 1
+
+    def test_expiration_staleness(self, container):
+        with patch("time.time", return_value=1000):
+            container["spell1"] = (10, 20, 30, 40)
+        with patch("time.time", return_value=1006):  # 6 seconds later
+            assert container.is_stale()
+
+    def test_not_stale(self, container):
+        with patch("time.time", return_value=1000):
+            container["spell1"] = (10, 20, 30, 40)
+        with patch("time.time", return_value=1004):  # 4 seconds later
+            assert not container.is_stale()
+
+    def test_auto_clear_stale_container(self, container):
+        with patch("time.time", return_value=1000):
+            container["spell1"] = (10, 20, 30, 40)
+        with patch("time.time", return_value=1006):  # 6 seconds later
+            assert container.auto_clear()
+            assert len(container) == 0
+
+    def test_auto_clear_active_container(self, container):
+        with patch("time.time", return_value=1000):
+            container["spell1"] = (10, 20, 30, 40)
+        with patch("time.time", return_value=1004):  # 4 seconds later
+            assert not container.auto_clear()
+            assert len(container) == 1
+
+    def test_reset_container(self, container):
+        container["spell1"] = (10, 20, 30, 40)
+        container.reset()
+        assert len(container) == 0
+        assert container.last_update_time is None
+
+    def test_get_box_empty_container(self, container):
+        with pytest.raises(
+            ValueError, match="Cannot proceed with an empty sigils history"
+        ):
+            container.get_box()
+
+    def test_get_box_non_empty_container(self, container):
+        container["spell1"] = (10, 20, 30, 40)
+        assert container.get_box() == (0, 10, 40, 50)

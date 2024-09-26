@@ -90,7 +90,7 @@ class SpellNet(object):
         # Preprocess the image: resize and normalize for EfficientNet B0
         input_data = self._preprocess_image(image)
         end_time = time.time()
-        logger.info(f"Preprocessing time: {(end_time - start_time) * 1000:.2f} ms")
+        logger.debug(f"Preprocessing time: {(end_time - start_time) * 1000:.2f} ms")
         logger.debug(f"got an image of shape {input_data.shape}")
         # Add batch dimension and ensure the data type matches the model's input type
         start_time = time.time()
@@ -107,9 +107,9 @@ class SpellNet(object):
         # Get the output tensor (predictions)
         output_data = self.interpreter.get_tensor(self.output_details[0]["index"])[0]
         end_time = time.time()
-        logger.info(f"Inference time: {(end_time - start_time) * 1000:.2f} ms")
+        logger.debug(f"Inference time: {(end_time - start_time) * 1000:.2f} ms")
 
         # Create the results dictionary with class names and probabilities
         results = {self.labels[i]: output_data[i] for i in range(len(self.labels))}
-        logger.info(f"got this prediction: {results}")
+        logger.debug(f"got this prediction: {results}")
         return results
