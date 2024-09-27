@@ -1,0 +1,149 @@
+{  "alohomora": [
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "fade_down"},
+          {"command": "color", "payload": {"color": "#ffff80"}},
+          {"command": "fade_up"},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "brightness", "payload": {"brightness": 75}},
+          {"command": "color", "payload": {"color": "#b3b300"}},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "fade_down"}
+        ]
+      }
+    }
+  ],
+  "arresto_momentum": [
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "fade_down"},
+          {"command": "color", "payload": {"color": "#ffff80"}},
+          {"command": "fade_up"},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "brightness", "payload": {"brightness": 75}},
+          {"command": "color", "payload": {"color": "#b3b300"}},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "fade_down"}
+        ]
+      }
+    }
+  ],
+  "locomotor": [
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "fade_down"},
+          {"command": "color", "payload": {"color": "#ffff80"}},
+          {"command": "fade_up"},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "brightness", "payload": {"brightness": 55}},
+          {"command": "color", "payload": {"color": "#9933ff"}},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "off"}
+        ]
+      }
+    }
+  ],
+  "lumos": [
+    {
+      "AudioEffect": "./media/audio/lumos_sound_effect.mp3"
+    },
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "off"},
+          {"command": "color", "payload": {"color": "#e6f2ff"}},
+          {"command": "wait", "payload": {"time": 0.5}},
+          {"command": "fade_up"},
+          {"command": "color", "payload": {"color": "#ffffff"}},
+          {"command": "wait", "payload": {"time": 5}},
+          {"command": "brightness", "payload": {"brightness": 55}},
+          {"command": "fade_up"},
+          {"command": "off"}
+        ]
+      }
+    }
+  ],
+  "noctis": [
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "color", "payload": {"color": "#330033"}},
+          {"command": "color", "payload": {"color": "#000066"}},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "off"}
+        ]
+      }
+    }
+  ],
+  "meteojinx": [
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "off"},
+          {"command": "color", "payload": {"color": "#2d2d86"}},
+          {"command": "fade_up"},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "brightness", "payload": {"brightness": 75}},
+          {"command": "color", "payload": {"color": "#e6f2ff"}},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "off"}
+        ]
+      }
+    }
+  ],
+  "silencio": [
+    {
+      "LightEffect": {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+          {"command": "off"},
+          {"command": "color", "payload": {"color": "#006644"}},
+          {"command": "fade_up"},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "brightness", "payload": {"brightness": 55}},
+          {"command": "color", "payload": {"color": "#00b377"}},
+          {"command": "wait", "payload": {"time": 1}},
+          {"command": "fade_down"}
+        ]
+      }
+    }
+  ],
+  "wand_detected": [],
+  "pipotter_ready": []
+}
