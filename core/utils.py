@@ -16,6 +16,8 @@ def pad_to_square(im, thumbnail_size=side, color=[0, 0, 0]):
     :param color: color for the background, black by default
     :return: a thumbnail_size x thumbnail_size resized image
     """
+    if im.dtype != np.uint8:
+        im = im.astype(np.uint8)
     # If the image is grayscale, convert it to RGB
     if len(im.shape) == 2:
         im = cv2.cvtColor(im, cv2.COLOR_GRAY2RGB)

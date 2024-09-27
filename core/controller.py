@@ -5,7 +5,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 import threading
 from media.video_source import VALID_SOURCES, looper, picamera
-from wand.detector import WandDetector
+import numpy as np
+from wand.detector import get_detector
 from wand.spell_net2.model import SpellNet
 from sfx.factory import EffectFactory
 from core.config import settings
@@ -57,7 +58,7 @@ class PiPotterController:
         self.save_images_directory = kwargs.get("save_images_directory", None)
 
         logger.debug("Initializing WandDetector")
-        self.wand_detector = WandDetector(video=self.video)
+        self.wand_detector = get_detector(detector_type="blobs", video=self.video)
 
         logger.debug("Initializing SpellNet")
         self.spell_net = SpellNet()
@@ -86,7 +87,11 @@ class PiPotterController:
                 if ret and frame is not None:
                     logger.debug("Got a new frame")
                     self.wand_detector.detect_wand(frame)
-                    if self.wand_detector.maybe_a_spell.size > 0:  # A sigil is detected
+                    maybe_a_spell = self.wand_detector.get_a_spell_maybe()
+                    if (
+                        maybe_a_spell is not None
+                        and np.count_nonzero(maybe_a_spell) > 0
+                    ):  # A sigil is detected
                         spell_name, self.preprocessed_frame = self._process_sigil(
                             self.wand_detector.maybe_a_spell
                         )
@@ -228,7 +233,8 @@ def video_frame_generator(controller):
 def sigil_frame_generator(controller):
     """Generate frames for the sigil detection feed."""
     while not controller.stop_event.is_set():
-        if controller.wand_detector.latest_sigil_frame is not None:
+        latest_sigil_frame = controller.wand_detector.get_a_spell_maybe()
+        if latest_sigil_frame is not None:
             logger.debug("Streaming latest_sigil_frame to client.")
             ret, jpeg = cv2.imencode(
                 ".jpg", controller.wand_detector.latest_sigil_frame
