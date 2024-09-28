@@ -1,9 +1,8 @@
 import numpy as np
 import pytest
 from random import randint
-from core.config import settings
-
-from core.utils import pad_to_square
+from src.core.config import settings
+from src.core.utils import pad_to_square
 
 
 @pytest.fixture(scope="module")

@@ -12,7 +12,7 @@ class WandDetector:
         self,
         video,
         brightness_threshold=150,
-        max_trace_speed=150,
+        max_trace_speed=550,
         trace_buffer_size=40,
         max_trace_duration=2.0,
     ):
@@ -44,8 +44,6 @@ class WandDetector:
             (self.frame_height, self.frame_width), np.uint8
         )  # Initialize trace frame
 
-        # Initialize other variables as before
-        self.maybe_a_spell = np.array([])  # Placeholder for detected sigils
         self.previous_wand_tip = (
             None  # Store previous wand tip position to track movement
         )
@@ -62,7 +60,7 @@ class WandDetector:
 
     def _get_blob_detector(self):
         """
-        Create and configure the blob detector used to detect the wand tip.
+        Create and configure the blob detector used to detect the wand tip with refined parameters.
 
         Returns:
             A configured blob detector.
@@ -75,12 +73,29 @@ class WandDetector:
         params.blobColor = (
             255  # Detect white blobs (assumes wand tip is bright/reflective)
         )
+
+        # Refined area parameters to filter out noise and irrelevant blobs
         params.filterByArea = True
-        params.minArea = 10  # Minimum area of the blob
-        params.maxArea = 5000  # Maximum area of the blob
-        params.filterByCircularity = False
-        params.filterByInertia = False
-        params.filterByConvexity = False
+        params.minArea = (
+            20  # Increased minimum area to filter out smaller noise artifacts
+        )
+        params.maxArea = 2000  # Decreased maximum area to ignore larger blobs
+
+        # Additional filters to refine detection
+        params.filterByCircularity = True
+        params.minCircularity = (
+            0.7  # Set a minimum circularity to filter out irregular shapes
+        )
+
+        params.filterByConvexity = True
+        params.minConvexity = (
+            0.8  # Set a minimum convexity to filter out non-convex shapes
+        )
+
+        params.filterByInertia = True
+        params.minInertiaRatio = (
+            0.4  # Set a minimum inertia ratio to filter out elongated shapes
+        )
 
         # Create a blob detector with the given parameters
         blob_detector = cv2.SimpleBlobDetector_create(params)
@@ -112,7 +127,7 @@ class WandDetector:
         # Detect blobs in the frame
         keypoints = self.blob_detector.detect(frame)
 
-        # Create a copy of the frame for debugging purposes
+        # Create a copy of the frame for processing and superimposing the trace
         self.latest_wand_frame = frame.copy()  # Store raw frame
         self.latest_debug_frame = frame.copy()  # Base frame for debug annotations
         self.latest_keypoints_frame = (
@@ -132,21 +147,20 @@ class WandDetector:
                 speed = distance / elapsed_time
                 if speed < self.max_trace_speed:
                     # Update trace if speed is within limit
-                    self._update_trace(frame, keypoints[0], current_time)
+                    self._update_trace(keypoints[0], current_time)
                 else:
                     logger.warning(
                         f"Excessive wand speed detected: {speed:.2f} pixels/second."
                     )
             else:
                 # Initial detection, no speed check
-                self._update_trace(frame, keypoints[0], current_time)
+                self._update_trace(keypoints[0], current_time)
 
             # Update previous wand tip and timestamp
             self.previous_wand_tip = keypoints[0]
             self.last_keypoint_time = current_time
 
             # Update maybe_a_spell with current wand tip trajectory
-            self.maybe_a_spell = np.array([k.pt for k, _ in self.wand_tip_movement])
             self._update_debug_frame(keypoints[0], speed)
             logger.info(f"Wand detected at {keypoints[0].pt}.")
         else:
@@ -164,7 +178,14 @@ class WandDetector:
                     current_time - self.last_detection_time
                 )
 
-    def _update_trace(self, frame, keypoint, current_time):
+        # Superimpose the trace on the latest_wand_frame if it is available
+        if self.latest_wand_frame is not None:
+            # Superimpose the trace on the latest_wand_frame
+            self.latest_wand_frame = self.superimpose_trace_on_video(
+                self.latest_wand_frame, self.wand_move_tracing_frame
+            )
+
+    def _update_trace(self, keypoint, current_time):
         """
         Update the wand trace with the new keypoint.
 
@@ -185,10 +206,11 @@ class WandDetector:
 
         # Draw the trace line on the tracing frame if there's a previous point
         if pt1:
-            cv2.line(self.wand_move_tracing_frame, pt1, pt2, 255, 4)
+            cv2.line(self.wand_move_tracing_frame, pt1, pt2, 255, 2)
 
-        # Update keypoints frame with current wand tip
-        cv2.circle(self.latest_keypoints_frame, pt2, 5, (0, 0, 255), -1)
+        # Update keypoints frame with current wand tip (visualization)
+        # Optional: You can skip this visualization if it's not needed
+        cv2.circle(self.latest_keypoints_frame, pt2, 3, (0, 0, 255), 1)
 
     def _update_trace_buffer(self, keypoint, current_time):
         """
@@ -312,21 +334,51 @@ class WandDetector:
         Returns:
             True if the trace is valid and ready for further processing.
         """
-        if not self.wand_tip_movement:
-            return False
-
-        current_keypoint_time = time.time()
-        elapsed_time = current_keypoint_time - self.last_keypoint_time
-
-        # Check if wand is still detected within a certain time threshold
-        if elapsed_time < 4.0:
-            return False
-
-        # Check if trace is long enough for a valid spell
+        result = False
         if len(self.wand_tip_movement) > self.trace_buffer_size - 5:
-            return True
+            result = True
 
-        return False
+        return result
+
+    def _crop_and_redraw_trace(self):
+        """
+        Generate a new clean image with the wand trace drawn, cropped to the bounding box of the trace.
+        This avoids thick lines due to multiple drawings on the same canvas.
+
+        Returns:
+            result: The newly drawn and cropped trace image.
+        """
+        cropped_trace = np.zeros((self.frame_height, self.frame_width), dtype=np.uint8)
+        # Ensure there are enough points in the trace buffer
+        if self.check_trace_validity():
+            # Get the bounding box for the trace based on the stored points
+            trace_x = [int(k.pt[0]) for k, _ in self.wand_tip_movement]
+            trace_y = [int(k.pt[1]) for k, _ in self.wand_tip_movement]
+            upper_left = (max(min(trace_x) - 10, 0), max(min(trace_y) - 10, 0))
+            lower_right = (
+                min(max(trace_x) + 10, self.frame_width),
+                min(max(trace_y) + 10, self.frame_height),
+            )
+
+            # Create a blank canvas for the cropped area
+            crop_width = lower_right[0] - upper_left[0]
+            crop_height = lower_right[1] - upper_left[1]
+            cropped_trace = np.zeros((crop_height, crop_width), dtype=np.uint8)
+
+            # Draw the trace lines based on the buffered points on this new canvas
+            for i in range(1, len(self.wand_tip_movement)):
+                pt1 = (
+                    int(self.wand_tip_movement[i - 1][0].pt[0]) - upper_left[0],
+                    int(self.wand_tip_movement[i - 1][0].pt[1]) - upper_left[1],
+                )
+                pt2 = (
+                    int(self.wand_tip_movement[i][0].pt[0]) - upper_left[0],
+                    int(self.wand_tip_movement[i][0].pt[1]) - upper_left[1],
+                )
+
+                # Draw a thin line on the clean canvas
+                cv2.line(cropped_trace, pt1, pt2, 255, 2)
+        return cropped_trace
 
     def _crop_trace(self):
         """
@@ -335,7 +387,7 @@ class WandDetector:
         Returns:
             Cropped image of the trace.
         """
-        result = None
+        result = np.zeros((self.frame_width, self.frame_height), np.uint8)
         if self.wand_tip_movement:
             # Get the bounding box for the trace
             trace_x = [int(k.pt[0]) for k, _ in self.wand_tip_movement]
@@ -363,9 +415,35 @@ class WandDetector:
         """
         Reset the internal state after a spell is detected and processed.
         """
-        self.maybe_a_spell = np.array([])  # Clear detected sigil
         self.wand_tip_movement.clear()  # Clear movement trajectory
         self.previous_wand_tip = None
         self.wand_move_tracing_frame.fill(0)  # Clear tracing frame
         self.last_detection_time = time.time()  # Reset last detection time
         logger.debug("WandDetector state has been reset.")
+
+    # Function to superimpose the trace on the current video frame
+    def superimpose_trace_on_video(self, video_frame, tracing_frame, alpha=0.6):
+        """
+        Superimpose the wand trace onto the current video frame.
+        """
+        # Print shapes for debugging
+        logger.debug(f"Video frame shape: {video_frame.shape}")
+        logger.debug(f"Tracing frame shape: {tracing_frame.shape}")
+
+        # Ensure both frames have the same dimensions
+        if tracing_frame.shape[:2] != video_frame.shape[:2]:
+            tracing_frame = cv2.resize(
+                tracing_frame, (video_frame.shape[1], video_frame.shape[0])
+            )
+
+        if len(video_frame.shape) == 2 or video_frame.shape[2] == 1:
+            video_frame = cv2.cvtColor(video_frame, cv2.COLOR_GRAY2BGR)
+
+        tracing_frame_bgr = cv2.cvtColor(tracing_frame, cv2.COLOR_GRAY2BGR)
+
+        colored_trace = np.zeros_like(tracing_frame_bgr)
+        colored_trace[:, :, 2] = tracing_frame
+
+        superimposed_frame = cv2.addWeighted(video_frame, 1.0, colored_trace, alpha, 0)
+
+        return superimposed_frame

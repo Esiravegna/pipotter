@@ -1,10 +1,12 @@
 import cv2
 import logging
 import numpy as np
+import os
 
-
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import threading
 import time
 
@@ -16,9 +18,14 @@ from core.config import settings
 from core.utils import pad_to_square
 
 logger = logging.getLogger(__name__)
-
+BASE_IMAGES_DIR = "media/base_images"
 # Create FastAPI app instance
 app = FastAPI()
+app.mount("/media", StaticFiles(directory="media"), name="media")
+
+# Set up the Jinja2 templates directory
+templates = Jinja2Templates(directory="templates")
+
 # Placeholder for a PiPotter controller instance
 PiPotter = None
 
@@ -36,7 +43,9 @@ class PiPotterController:
         """
         logger.info("Initializing PiPotterController")
         flip = settings["PIPOTTER_FLIP_VIDEO"]
-        self.spell_frame = None
+        self.spell_frame = np.zeros((224, 224), np.uint8)
+        self.latest_predictions = {}
+
         if video_source_name not in VALID_SOURCES:
             raise ValueError(
                 f"Invalid controller name: {video_source_name}. Must be one of: {VALID_SOURCES}"
@@ -61,7 +70,7 @@ class PiPotterController:
         self.save_images_directory = kwargs.get("save_images_directory", None)
 
         logger.debug("Initializing WandDetector")
-        self.wand_detector = get_detector(detector_type="blobs", video=self.video)
+        self.wand_detector = get_detector(detector_type="circles", video=self.video)
 
         logger.debug("Initializing SpellNet")
         self.spell_net = SpellNet()
@@ -96,7 +105,7 @@ class PiPotterController:
                         and np.count_nonzero(maybe_a_spell) > 0
                     ):  # A sigil is detected
                         spell_name, self.preprocessed_frame = self._process_sigil(
-                            self.wand_detector.maybe_a_spell
+                            maybe_a_spell
                         )
                         logger.debug(f"Updated preprocessed_frame at {time.time()}")
                         self._accio_spell(spell_name)
@@ -111,12 +120,20 @@ class PiPotterController:
 
     def _process_sigil(self, a_sigil):
         """Process a sigil by feeding it through the SpellNet model."""
+
+        # Step 1: Pad the sigil to square
         squared_sigil = pad_to_square(a_sigil)
         self.spell_frame = squared_sigil
+
+        # Step 2: Classify using the SpellNet model
         predictions = self.spell_net.classify(squared_sigil)
+        self.latest_predictions = predictions
         logger.info(f"predict {predictions}")
+
+        # Step 3: Save the raw sigil
         self._save_file(a_sigil, preffix="RAW")
 
+        # Step 4: Filter predictions based on a threshold
         possible = {k: v for k, v in predictions.items() if v >= self.spell_threshold}
         result = (
             max(possible, key=possible.get)
@@ -124,7 +141,9 @@ class PiPotterController:
             else settings["PIPOTTER_NO_SPELL_LABEL"]
         )
 
+        # Step 5: Save the image with the result label as prefix
         self._save_file(squared_sigil, preffix=result)
+
         return result, squared_sigil
 
     def _terminate(self):
@@ -142,14 +161,28 @@ class PiPotterController:
     def _accio_spell(self, spell_name):
         """Runs the effect for the given spell."""
         if spell_name != settings["PIPOTTER_NO_SPELL_LABEL"]:
-            self.wand_detector.reset()
             logger.info(f"Running effect for spell {spell_name}")
             self.effects[spell_name].run()
         else:
             logger.debug("No spell detected")
+        self.wand_detector.reset()
 
 
-### FastAPI endpoints for streaming
+### FastAPI methods for debuf streaming
+def convert_numpy_types(data):
+    """
+    Convert numpy data types to native Python types.
+    """
+    if isinstance(data, np.ndarray):
+        return data.tolist()  # Convert numpy array to list
+    elif isinstance(data, np.generic):  # Check for numpy scalar types like np.float32
+        return data.item()  # Convert numpy scalar to native Python type
+    elif isinstance(data, dict):
+        return {key: convert_numpy_types(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_numpy_types(item) for item in data]
+    else:
+        return data
 
 
 @app.get("/video_feed")
@@ -160,18 +193,6 @@ async def video_feed():
         )
     return StreamingResponse(
         video_frame_generator(PiPotter),
-        media_type="multipart/x-mixed-replace; boundary=frame",
-    )
-
-
-@app.get("/sigil_feed")
-async def sigil_feed():
-    if PiPotter is None:
-        raise HTTPException(
-            status_code=500, detail="PiPotter controller not initialized."
-        )
-    return StreamingResponse(
-        sigil_frame_generator(PiPotter),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
 
@@ -188,99 +209,30 @@ async def preprocessed_feed():
     )
 
 
-@app.get("/debug_feed")
-async def debug_feed():
-    """Stream the debug feed showing detected circles."""
+@app.get("/predictions", response_class=JSONResponse)
+async def get_predictions():
     if PiPotter is None:
         raise HTTPException(
             status_code=500, detail="PiPotter controller not initialized."
         )
-    return StreamingResponse(
-        debug_frame_generator(PiPotter),
-        media_type="multipart/x-mixed-replace; boundary=frame",
-    )
-
-
-@app.get("/keypoints_feed")
-async def debug_feed():
-    """Stream the debug feed showing detected preprocessed circles."""
-    if PiPotter is None:
-        raise HTTPException(
-            status_code=500, detail="PiPotter controller not initialized."
-        )
-    return StreamingResponse(
-        keypoints_frame_generator(PiPotter),
-        media_type="multipart/x-mixed-replace; boundary=frame",
-    )
+    # Return the latest predictions stored in PiPotter
+    result = JSONResponse(content=convert_numpy_types(PiPotter.latest_predictions))
+    return result
 
 
 @app.get("/", response_class=HTMLResponse)
-async def all_feeds():
-    """Serve a webpage displaying all the feeds."""
-    html_content = """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PiPotter Feeds</title>
-        <style>
-            body {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                background-color: #f0f0f0;
-                margin: 0;
-                padding: 20px;
-            }
-            .feed {
-                margin: 10px;
-                border: 2px solid #333;
-                width: 400px;
-                height: 300px;
-                position: relative;
-            }
-            .feed img {
-                width: 100%;
-                height: 100%;
-                display: block;
-            }
-            .feed-title {
-                position: absolute;
-                bottom: 5px;
-                left: 5px;
-                background: rgba(0, 0, 0, 0.5);
-                color: #fff;
-                padding: 5px;
-                border-radius: 3px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="feed">
-            <div class="feed-title">Video Feed</div>
-            <img src="/video_feed" alt="Video Feed" />
-        </div>
-        <div class="feed">
-            <div class="feed-title">Sigil Feed</div>
-            <img src="/sigil_feed" alt="Sigil Feed" />
-        </div>
-        <div class="feed">
-            <div class="feed-title">Spell Feed</div>
-            <img src="/spell_feed" alt="Spell Feed" />
-        </div>
-        <div class="feed">
-            <div class="feed-title">Debug Feed</div>
-            <img src="/debug_feed" alt="Debug Feed" />
-        </div>
-        <div class="feed">
-            <div class="feed-title">Keypoints Feed</div>
-            <img src="/keypoints_feed" alt="Keypoints Feed" />
-        </div>
-    </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
+async def all_feeds(request: Request):
+    """Serve a webpage displaying all the feeds and additional data."""
+    # List all images in the base_images directory
+    base_images = [
+        {"filename": filename, "title": os.path.splitext(filename)[0]}
+        for filename in os.listdir(BASE_IMAGES_DIR)
+        if filename.lower().endswith((".png", ".jpg", ".jpeg"))
+    ]
+
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "base_images": base_images}
+    )
 
 
 ### Frame Generators for Streaming
@@ -297,29 +249,6 @@ def video_frame_generator(controller):
                 )
             else:
                 logger.warning("Failed to encode latest_wand_frame to JPEG.")
-        else:
-            logger.warning("No latest_wand_frame available for streaming.")
-        time.sleep(0.05)
-
-
-def sigil_frame_generator(controller):
-    """Generate frames for the sigil detection feed."""
-    while not controller.stop_event.is_set():
-        latest_sigil_frame = controller.wand_detector.get_a_spell_maybe()
-        if latest_sigil_frame is not None:
-            logger.debug("Streaming latest_sigil_frame to client.")
-            ret, jpeg = cv2.imencode(
-                ".jpg", controller.wand_detector.latest_sigil_frame
-            )
-            if ret:
-                yield (
-                    b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n\r\n"
-                )
-            else:
-                logger.warning("Failed to encode latest_sigil_frame to JPEG.")
-        else:
-            logger.warning("No latest_sigil_frame available for streaming.")
         time.sleep(0.05)
 
 
@@ -338,36 +267,4 @@ def spell_frame_generator(controller):
                 logger.warning("Failed to encode spell_frame to JPEG.")
         else:
             logger.warning("No spell_frame available for streaming.")
-        time.sleep(0.05)
-
-
-def debug_frame_generator(controller):
-    """Generate frames for the debug feed showing detected circles."""
-    while not controller.stop_event.is_set():
-        frame = controller.wand_detector.latest_debug_frame
-        if frame is not None:
-            ret, jpeg = cv2.imencode(
-                ".jpg", controller.wand_detector.latest_debug_frame
-            )
-            if ret:
-                yield (
-                    b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n\r\n"
-                )
-        time.sleep(0.05)
-
-
-def keypoints_frame_generator(controller):
-    """Generate frames for the debug feed showing detected circles preprocessed."""
-    while not controller.stop_event.is_set():
-        frame = controller.wand_detector.latest_keypoints_frame
-        if frame is not None:
-            ret, jpeg = cv2.imencode(
-                ".jpg", controller.wand_detector.latest_keypoints_frame
-            )
-            if ret:
-                yield (
-                    b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n\r\n"
-                )
         time.sleep(0.05)

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import json
-from sfx.lights.effect import (
+from src.sfx.lights.effect import (
     LightEffect,
     SFXError,
 )  # Assuming your code is in light_effect.py

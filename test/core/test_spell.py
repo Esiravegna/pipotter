@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 
-from wand.spellscontainer import SpellsContainer, SpellSigil
+from src.wand.spellscontainer import SpellsContainer, SpellSigil
 
 
 @pytest.fixture(scope="module")

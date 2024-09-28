@@ -1,10 +1,17 @@
 import logging
 import click
-import uvicorn
+from pathlib import Path
+import sys
 from sys import exit
-from core.log import configure_log
-from core.config import settings
-from core.controller import PiPotterController, set_pipotter
+import uvicorn
+
+project_root = Path(__file__).parent
+src_path = project_root / "src"
+sys.path.append(str(src_path))
+
+from src.core.log import configure_log
+from src.core.config import settings
+from src.core.controller import PiPotterController, set_pipotter
 
 
 # Configure logging
@@ -45,7 +52,7 @@ print(BANNER)
 @click.option(
     "--config-file",
     help="Where to read the configuration file. Defaults to ./config.json",
-    default="./config.json",
+    default="./config/config.json",
 )
 def run_command(video_source, video_file, save_images_directory, config_file):
     """
@@ -72,7 +79,7 @@ def run_command(video_source, video_file, save_images_directory, config_file):
 
     # Start FastAPI app using Uvicorn
     uvicorn.run(
-        "core.controller:app",
+        "src.core.controller:app",
         host="0.0.0.0",
         port=8000,
         log_level=settings["PIPOTTER_LOGLEVEL"].lower(),

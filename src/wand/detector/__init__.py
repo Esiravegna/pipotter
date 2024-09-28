@@ -1,7 +1,12 @@
 from wand.detector.detector_blobs import WandDetector as BlobsDetector
 from wand.detector.detector_circles import WandDetector as CirclesDetector
+from wand.detector.detector_fast import WandDetector as FastDetector
 
-AVAILABLE_DETECTORS = {"blobs": BlobsDetector, "circles": CirclesDetector}
+AVAILABLE_DETECTORS = {
+    "blobs": BlobsDetector,
+    "circles": CirclesDetector,
+    "fast": FastDetector,
+}
 
 
 def get_detector(detector_type, video, **kwargs):
