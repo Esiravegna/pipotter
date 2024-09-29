@@ -10,9 +10,23 @@ logger = logging.getLogger(__name__)
 class LEDControl(Effect):
     """
     A class to control individual LEDs connected to GPIO pins via a JSON-based configuration.
+
+    Example:
+
+    {
+        "led_pins": {
+            "LED1": 17,
+            "LED2": 27
+        },
+        "commands": [
+            {"command": "turn_on", "payload": {"led": "LED1"}},
+            {"command": "turn_off", "payload": {"led": "LED2"}},
+            {"command": "cleanup"}
+        ]
+    }
     """
 
-    def __init__(self, jsonable_string):
+    def __init__(self, jsonable_string: str):
         """
         Initialize the LEDControl class from a JSON string.
 
@@ -21,13 +35,12 @@ class LEDControl(Effect):
         super().__init__()
         self.led_pins = {}
         self.commands = []
-        self.use_pwm = False
         self.name = "LEDControlEffect"
 
         logger.info("Initializing LEDControl")
         self._read_json(jsonable_string)
 
-    def _read_json(self, jsonable_string):
+    def _read_json(self, jsonable_string: str):
         """
         Parse the JSON configuration and initialize the LED control.
         """
@@ -40,21 +53,15 @@ class LEDControl(Effect):
 
         try:
             led_pins = config["led_pins"]
-            self.use_pwm = config.get("use_pwm", False)
-            frequency = config.get("frequency", 100)
-
             logger.info("Setting up GPIO and LED pins")
             GPIO.setmode(GPIO.BCM)
+
+            # Setup each pin as output and initialize to LOW
             for led, pin in led_pins.items():
                 GPIO.setup(pin, GPIO.OUT)
-                if self.use_pwm:
-                    pwm = GPIO.PWM(pin, frequency)
-                    pwm.start(0)
-                    self.led_pins[led] = pwm
-                    logger.info(f"LED {led} (Pin {pin}) initialized with PWM")
-                else:
-                    self.led_pins[led] = GPIO.LOW
-                    logger.info(f"LED {led} (Pin {pin}) initialized without PWM")
+                GPIO.output(pin, GPIO.LOW)  # Initialize LED to OFF
+                self.led_pins[led] = pin
+                logger.info(f"LED {led} (Pin {pin}) initialized and set to LOW")
 
             # Parse commands
             logger.info("Parsing LEDControl commands")
@@ -64,21 +71,23 @@ class LEDControl(Effect):
 
                 if cmd_type == "turn_on":
                     led = payload.get("led")
+                    if led not in self.led_pins:
+                        logger.error(f"LED {led} not found in configuration.")
+                        continue
                     self.commands.append(("turn_on", led))
                     logger.debug(f"Command added: Turn on LED {led}")
 
                 elif cmd_type == "turn_off":
                     led = payload.get("led")
+                    if led not in self.led_pins:
+                        logger.error(f"LED {led} not found in configuration.")
+                        continue
                     self.commands.append(("turn_off", led))
                     logger.debug(f"Command added: Turn off LED {led}")
 
-                elif cmd_type == "set_brightness":
-                    led = payload.get("led")
-                    brightness = payload.get("brightness", 100)
-                    self.commands.append(("set_brightness", led, brightness))
-                    logger.debug(
-                        f"Command added: Set brightness of LED {led} to {brightness}%"
-                    )
+                elif cmd_type == "cleanup":
+                    self.commands.append(("cleanup",))
+                    logger.debug("Command added: Cleanup GPIO")
 
                 else:
                     logger.warning(f"Unknown command: {cmd_type}")
@@ -87,29 +96,23 @@ class LEDControl(Effect):
             logger.error(f"Missing required configuration parameter: {e}")
             raise SFXError(f"Missing required configuration parameter: {e}")
 
-    def turn_on(self, led):
+    def turn_on(self, led: str):
         """Turn on the LED."""
-        logger.info(f"Turning on LED {led}")
-        if self.use_pwm:
-            self.led_pins[led].ChangeDutyCycle(100)  # 100% brightness
+        if led in self.led_pins:
+            pin = self.led_pins[led]
+            logger.info(f"Turning on LED {led} (Pin {pin})")
+            GPIO.output(pin, GPIO.HIGH)
         else:
-            GPIO.output(self.led_pins[led], GPIO.HIGH)
+            logger.error(f"LED {led} not found in configuration")
 
-    def turn_off(self, led):
+    def turn_off(self, led: str):
         """Turn off the LED."""
-        logger.info(f"Turning off LED {led}")
-        if self.use_pwm:
-            self.led_pins[led].ChangeDutyCycle(0)  # 0% brightness
+        if led in self.led_pins:
+            pin = self.led_pins[led]
+            logger.info(f"Turning off LED {led} (Pin {pin})")
+            GPIO.output(pin, GPIO.LOW)
         else:
-            GPIO.output(self.led_pins[led], GPIO.LOW)
-
-    def set_brightness(self, led, brightness):
-        """Set the brightness of the LED using PWM."""
-        logger.info(f"Setting brightness of LED {led} to {brightness}%")
-        if not self.use_pwm:
-            logger.error("Attempted to set brightness without PWM enabled")
-            raise SFXError("PWM is not enabled for this instance.")
-        self.led_pins[led].ChangeDutyCycle(brightness)
+            logger.error(f"LED {led} not found in configuration")
 
     def run(self):
         """Run the commands for controlling LEDs."""
@@ -125,14 +128,18 @@ class LEDControl(Effect):
                 led = command[1]
                 self.turn_off(led)
 
-            elif action == "set_brightness":
-                led, brightness = command[1], command[2]
-                self.set_brightness(led, brightness)
+            elif action == "cleanup":
+                self.cleanup()
 
     def cleanup(self):
         """Cleanup the GPIO pins."""
         logger.info("Cleaning up GPIO for LEDControl")
-        for led in self.led_pins.values():
-            if self.use_pwm:
-                led.stop()
         GPIO.cleanup()
+
+    def __enter__(self):
+        """Enter method for use in a context manager."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit method for use in a context manager, ensuring cleanup is called."""
+        self.cleanup()

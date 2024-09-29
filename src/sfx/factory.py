@@ -119,6 +119,9 @@ class EffectFactory(object):
     def __getitem__(self, spellname):
         return self.spells[spellname]
 
+    def __iter__(self):
+        return iter(self.spells)
+
     def _create_effect(self, effect, effect_value):
         """
         Given the valid effect name and its value, create a corresponding effect.

@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 class WandDetector(BaseDetector):
-    POINTS_BUFFER_SIZE = 40
+    POINTS_BUFFER_SIZE = 20
     TRACE_THICKNESS = 3
-    MAX_TRACE_SPEED = 150  # pixels/second
+    MAX_TRACE_SPEED = 250  # pixels/second
     CROPPED_IMG_MARGIN = 10  # pixels
     OUTPUT_SIZE = 224  # Output image size for the spell representation
 
@@ -110,7 +110,6 @@ class WandDetector(BaseDetector):
             frame: The current grayscale video frame to be processed.
         """
         self.cameraFrame = frame
-        self.latest_wand_frame = frame.copy()  # Store raw frame
         speed = 0
         fgmask = self.bgsub.apply(self.cameraFrame)
         bgSubbedCameraFrame = cv2.bitwise_and(self.cameraFrame, fgmask)
@@ -169,7 +168,7 @@ class WandDetector(BaseDetector):
 
         # Superimpose the trace and debug info onto the latest wand frame
         self.latest_wand_frame = self.superimpose_trace_and_debug_info(
-            self.latest_wand_frame,
+            frame.copy(),
             self.wand_move_tracing_frame,
             self.blobKeypoints,
             speed,
@@ -219,7 +218,7 @@ class WandDetector(BaseDetector):
         for keypoint in keypoints:
             pt = (int(keypoint.pt[0]), int(keypoint.pt[1]))
             cv2.circle(
-                colored_trace, pt, 5, (0, 255, 0), -1
+                colored_trace, pt, 5, (0, 255, 0), 3
             )  # Green circles for keypoints
 
         # Combine the video frame with the trace and keypoints
@@ -233,7 +232,7 @@ class WandDetector(BaseDetector):
                 (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
-                (0, 255, 0),
+                (0, 0, 255),
                 1,
             )
             cv2.putText(
@@ -242,7 +241,7 @@ class WandDetector(BaseDetector):
                 (10, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
-                (0, 255, 0),
+                (0, 0, 250),
                 1,
             )
             cv2.putText(
@@ -251,7 +250,7 @@ class WandDetector(BaseDetector):
                 (10, 70),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
-                (0, 255, 0),
+                (0, 0, 250),
                 1,
             )
 
@@ -265,7 +264,9 @@ class WandDetector(BaseDetector):
             (self.frame_height, self.frame_width, 1), np.uint8
         )
         self.tracePoints = []
-        self.latest_wand_frame = None  # Raw frame being processed
+        self.latest_wand_frame = self.superimpose_trace_and_debug_info(
+            self.get_valid_frame(), self.wand_move_tracing_frame, self.blobKeypoints, 0
+        )
 
     def check_trace_validity(self, max_time=2):
         """

@@ -14,25 +14,127 @@ logger = logging.getLogger(__name__)
 class LightEffect(Effect):
     """
     A NeoPixel-based effect for controlling addressable LEDs (like WS2812).
+    This class creates the NeoPixel object from a JSON configuration and supports multiple effects.
 
-    Now creates the NeoPixel object from a JSON configuration and supports multiple effects.
+    Example:
 
-    Usage:
-    ```
-    json_config = '{"gpio_pin": "D18", "num_leds": 16, "brightness": 0.4, "pixel_order": "GRB", "commands": [{"command": "rollcall_cycle", "payload": {"wait": 0.1}}]}'
-    an_effect = LightEffect(json_config)
-    an_effect.run()
-    ```
+    {
+            "gpio_pin": "D18",
+            "num_leds": 16,
+            "brightness": 0.5,
+            "pixel_order": "GRB",
+            "commands": [
+                {
+                "command": "rollcall_cycle",
+                "payload": {
+                    "wait": 0.1,
+                    "colors": ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"]
+                }
+                },
+                {
+                "command": "wait",
+                "payload": {
+                    "wait": 2
+                }
+                },
+                {
+                "command": "fire_effect",
+                "payload": {
+                    "num_random": 5,
+                    "fire_color": "#FF4500",
+                    "fade_by": -5,
+                    "delay": 0.1
+                }
+                },
+                {
+                "command": "wait",
+                "payload": {
+                    "wait": 3
+                }
+                },
+                {
+                "command": "fade_up",
+                "payload": {
+                    "brightness": 100
+                }
+                },
+                {
+                "command": "wait",
+                "payload": {
+                    "wait": 1
+                }
+                },
+                {
+                "command": "fade_down",
+                "payload": {
+                    "brightness": 10
+                }
+                },
+                {
+                "command": "color",
+                "payload": {
+                    "led": 0,
+                    "color": "#FFFFFF"
+                }
+                },
+                {
+                "command": "color",
+                "payload": {
+                    "led": 1,
+                    "color": "#FF00FF"
+                }
+                },
+                {
+                "command": "color",
+                "payload": {
+                    "led": 2,
+                    "color": "#00FF00"
+                }
+                },
+                {
+                "command": "wait",
+                "payload": {
+                    "wait": 1
+                }
+                },
+                {
+                "command": "off",
+                "payload": {
+                    "led": 0
+                }
+                },
+                {
+                "command": "off",
+                "payload": {
+                    "led": 1
+                }
+                },
+                {
+                "command": "off",
+                "payload": {
+                    "led": 2
+                }
+                },
+                {
+                "command": "brightness",
+                "payload": {
+                    "brightness": 50
+                }
+                }
+            ]
+    }
+
     """
 
-    def __init__(self, jsonable_string):
+    def __init__(self, jsonable_string: str):
         """
-        The constructor, which initializes the NeoPixel strip from a JSON string.
+        Initialize the NeoPixel strip and commands from a JSON string.
 
         :param jsonable_string: A JSON string with configuration for the NeoPixel object and commands.
         """
+        super().__init__()
         self.strip = None
-        self.commands = []  # This will store the parsed commands
+        self.commands = []  # Store parsed commands
         self.default_gokai_colours = [
             (255, 0, 0),
             (0, 0, 255),
@@ -43,16 +145,18 @@ class LightEffect(Effect):
         ]
         self.name = "LightEffect"
 
+        logger.info("Initializing LightEffect")
         self._read_json(jsonable_string)
 
-    def _read_json(self, jsonable_string):
+    def _read_json(self, jsonable_string: str):
         """
-        Reads the JSON config string and translates it into NeoPixel configurations and commands.
+        Read the JSON config and translate it into NeoPixel configurations and commands.
         """
         logger.debug("Reading JSON config file")
         try:
             config = json.loads(jsonable_string)
         except (AttributeError, ValueError) as e:
+            logger.error(f"Invalid JSON configuration: {e}")
             raise SFXError(f"Invalid JSON configuration: {e}")
 
         # Parse NeoPixel configuration
@@ -63,11 +167,11 @@ class LightEffect(Effect):
             pixel_order_str = config.get("pixel_order", "GRB")
             pixel_order = getattr(neopixel, pixel_order_str, neopixel.GRB)
         except KeyError as e:
+            logger.error(f"Missing required configuration parameter: {e}")
             raise SFXError(f"Missing required configuration parameter: {e}")
         except AttributeError as e:
+            logger.error(f"Invalid GPIO pin or pixel order: {e}")
             raise SFXError(f"Invalid GPIO pin or pixel order: {e}")
-        except Exception as e:
-            raise SFXError(f"Error reading configuration: {e}")
 
         # Initialize NeoPixel strip
         self.strip = neopixel.NeoPixel(
@@ -123,92 +227,62 @@ class LightEffect(Effect):
 
                 elif cmd_type == "off":
                     led_index = payload.get("led", 0)
+                    self.commands.append(("off", led_index))
 
                 elif cmd_type == "wait":
                     wait_time = payload.get("wait", 0)
                     self.commands.append(("wait", wait_time))
+
                 else:
                     logger.warning(f"Unknown command: {cmd_type}")
         except Exception as e:
+            logger.error(f"Error reading commands: {e}")
             raise SFXError(f"Error reading commands: {e}")
 
         logger.debug("JSON processed successfully")
 
-    def _hex_to_rgb(self, hex_color):
-        """
-        Convert a hex color (string) to an RGB tuple.
-        """
+    def _hex_to_rgb(self, hex_color: str) -> tuple:
+        """Convert a hex color (string) to an RGB tuple."""
         hex_color = hex_color.lstrip("#")
         return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
 
-    def _fade(self, colour1, colour2, percent):
-        """
-        Transition between two colors based on the percentage.
-        """
-        colour1 = np.array(colour1)
-        colour2 = np.array(colour2)
-        vector = colour2 - colour1
-        newcolour = (
-            int((colour1 + vector * percent)[0]),
-            int((colour1 + vector * percent)[1]),
-            int((colour1 + vector * percent)[2]),
-        )
-        return newcolour
-
-    def _rollcall_cycle(self, wait, colors):
-        """
-        Cycle through a set of colors with smooth transitions.
-        """
+    def _rollcall_cycle(self, wait: float, colors: list):
+        """Cycle through a set of colors with smooth transitions."""
         for j in range(len(colors)):
             for i in range(10):
                 colour1 = colors[j]
-                # Cycle back to the first color after the last one
                 colour2 = colors[0] if j == len(colors) - 1 else colors[j + 1]
-                percent = i * 0.1  # 0.1*100 so 10% increments between colors
+                percent = i * 0.1
                 transition_color = self._fade(colour1, colour2, percent)
                 self.strip.fill(transition_color)
                 self.strip.show()
                 time.sleep(wait)
 
-    def _fire_effect(self, num_random, fire_color, fade_by, delay):
+    def _fire_effect(
+        self, num_random: int, fire_color: tuple, fade_by: int, delay: float
+    ):
         """Run the fire effect by lighting random LEDs and fading all LEDs."""
         while True:
-            # Light random LEDs with the fire color
             self._light_random_leds(num_random, fire_color)
-
-            # Measure start time
-            start_time = time.monotonic()
-
-            # Fade all LEDs
             self._fade_leds(fade_by)
-
-            # Measure elapsed time
-            elapsed_time = time.monotonic() - start_time
-            print(f"Update took {int(elapsed_time * 1000)} ms")
-
-            # Update the strip
             self.strip.show()
-
-            # Small delay before next frame
             time.sleep(delay)
 
-    def _light_random_leds(self, num_random, color):
+    def _light_random_leds(self, num_random: int, color: tuple):
         """Light up random LEDs with a specified color."""
         for _ in range(num_random):
             random_index = random.randint(0, len(self.strip) - 1)
             self.strip[random_index] = color
 
-    def _fade_leds(self, fade_by):
-        """Fade down all LEDs by a certain value (fade_by)."""
+    def _fade_leds(self, fade_by: int):
+        """Fade down all LEDs by a certain value."""
         for i in range(len(self.strip)):
             self.strip[i] = tuple(
                 min(max(channel + fade_by, 0), 255) for channel in self.strip[i]
             )
 
     def run(self):
-        """
-        Runs the effects on the NeoPixel strip.
-        """
+        """Run the commands for controlling the NeoPixel strip."""
         logger.info("Running the commands")
         try:
             for command in self.commands:
@@ -252,8 +326,25 @@ class LightEffect(Effect):
                     self.strip[led_index] = (0, 0, 0)
                     self.strip.show()
 
-                time.sleep(1)  # Simulate time between commands
+                elif action == "wait":
+                    wait_time = command[1]
+                    time.sleep(wait_time)
 
             logger.info("Commands ran successfully")
         except Exception as e:
+            logger.error(f"Unable to run the sequence due to {e}")
             raise SFXError(f"Unable to run the sequence due to {e}")
+
+    def cleanup(self):
+        """Turn off all LEDs and clean up resources."""
+        logger.info("Cleaning up and turning off all LEDs")
+        self.strip.fill((0, 0, 0))
+        self.strip.show()
+
+    def __enter__(self):
+        """Enter method for context management."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit method for context management, ensuring cleanup is called."""
+        self.cleanup()

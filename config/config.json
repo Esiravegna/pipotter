@@ -1,22 +1,27 @@
-{  "alohomora": [
+{  "close_lid": [
     {
       "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
     {
-      "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
-        "commands": [
-          {"command": "fade_down"},
-          {"command": "color", "payload": {"color": "#ffff80"}},
-          {"command": "fade_up"},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "brightness", "payload": {"brightness": 75}},
-          {"command": "color", "payload": {"color": "#b3b300"}},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "fade_down"}
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands" : [
+          {"command":"set_angle", "payload":{"angle": 0}},
+          {"command":"stop"}
+        ]
+      }
+    }
+  ],
+  "alohomora": [
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands" : [
+          {"command":"set_angle", "payload":{"angle": 180}},
+          {"command":"stop"}
         ]
       }
     }
@@ -27,8 +32,8 @@
     },
     {
       "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
+        "gpio_pin": "D10",
+        "num_leds": 26,
         "brightness": 0.5,
         "pixel_order": "GRB",
         "commands": [
@@ -47,8 +52,8 @@
   "locomotor": [
     {
       "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
+        "gpio_pin": "D10",
+        "num_leds": 26,
         "brightness": 0.5,
         "pixel_order": "GRB",
         "commands": [
@@ -70,8 +75,8 @@
     },
     {
       "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
+        "gpio_pin": "D10",
+        "num_leds": 26,
         "brightness": 0.5,
         "pixel_order": "GRB",
         "commands": [
@@ -91,8 +96,8 @@
   "noctis": [
     {
       "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
+        "gpio_pin": "D10",
+        "num_leds": 26,
         "brightness": 0.5,
         "pixel_order": "GRB",
         "commands": [
@@ -107,8 +112,8 @@
   "meteojinx": [
     {
       "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
+        "gpio_pin": "D10",
+        "num_leds": 26,
         "brightness": 0.5,
         "pixel_order": "GRB",
         "commands": [
@@ -127,8 +132,8 @@
   "silencio": [
     {
       "LightEffect": {
-        "gpio_pin": "D18",
-        "num_leds": 16,
+        "gpio_pin": "D10",
+        "num_leds": 26,
         "brightness": 0.5,
         "pixel_order": "GRB",
         "commands": [
