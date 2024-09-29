@@ -241,6 +241,24 @@ class LightEffect(Effect):
 
         logger.debug("JSON processed successfully")
 
+    def _fade(self, color1: tuple, color2: tuple, percent: float) -> tuple:
+        """
+        Transition between two colors based on the percentage.
+        :param color1: The starting RGB color tuple (e.g., (255, 0, 0)).
+        :param color2: The target RGB color tuple (e.g., (0, 255, 0)).
+        :param percent: The percentage (0.0 to 1.0) indicating how much to transition.
+        :return: An RGB tuple representing the color at the given percentage between color1 and color2.
+        """
+        # Convert the colors to numpy arrays for easy calculation
+        color1 = np.array(color1)
+        color2 = np.array(color2)
+
+        # Interpolate between the two colors based on the percentage
+        blended_color = color1 + (color2 - color1) * percent
+
+        # Ensure the resulting color values are valid RGB integers (0-255)
+        return tuple(int(channel) for channel in blended_color)
+
     def _hex_to_rgb(self, hex_color: str) -> tuple:
         """Convert a hex color (string) to an RGB tuple."""
         hex_color = hex_color.lstrip("#")
