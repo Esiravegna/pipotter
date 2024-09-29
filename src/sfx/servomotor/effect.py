@@ -16,7 +16,6 @@ class ServoMotor(Effect):
     def __init__(self, jsonable_string):
         """
         Initialize the ServoMotor class from a JSON string.
-
         :param jsonable_string: A JSON string with servo configuration and commands.
         """
         super().__init__()
@@ -31,7 +30,7 @@ class ServoMotor(Effect):
 
     def _read_json(self, jsonable_string):
         """
-        Parse the JSON configuration and initialize the servo motor.
+        Parse the JSON configuration and store the servo motor commands.
         """
         logger.debug("Parsing ServoMotor JSON configuration")
         try:
@@ -44,19 +43,8 @@ class ServoMotor(Effect):
             self.gpio_pin = config["gpio_pin"]
             self.frequency = config.get("frequency", 50)
 
-            logger.info(f"Setting up GPIO pin {self.gpio_pin} for ServoMotor")
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.gpio_pin, GPIO.OUT)
-
-            # Initialize PWM for servo motor
-            self.pwm = GPIO.PWM(self.gpio_pin, self.frequency)
-            self.pwm.start(0)
-            logger.info(
-                f"ServoMotor initialized on pin {self.gpio_pin} with frequency {self.frequency}Hz"
-            )
-
-            # Parse commands
-            logger.info("Parsing ServoMotor commands")
+            # Store commands without initializing GPIO and PWM yet
+            logger.info("Storing ServoMotor commands")
             for command in config.get("commands", []):
                 cmd_type = command.get("command")
                 payload = command.get("payload", {})
@@ -77,6 +65,19 @@ class ServoMotor(Effect):
             logger.error(f"Missing required configuration parameter: {e}")
             raise SFXError(f"Missing required configuration parameter: {e}")
 
+    def _initialize_pwm(self):
+        """
+        Initialize GPIO and PWM. This is called when the effect is run, not during object creation.
+        """
+        logger.info(f"Setting up GPIO pin {self.gpio_pin} for ServoMotor")
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.gpio_pin, GPIO.OUT)
+        self.pwm = GPIO.PWM(self.gpio_pin, self.frequency)
+        self.pwm.start(0)
+        logger.info(
+            f"ServoMotor initialized on pin {self.gpio_pin} with frequency {self.frequency}Hz"
+        )
+
     def set_angle(self, angle):
         """
         Set the servo angle.
@@ -89,19 +90,32 @@ class ServoMotor(Effect):
 
     def stop(self):
         """Stop the servo motor and cleanup GPIO."""
-        logger.info("Stopping ServoMotor and cleaning up GPIO")
-        self.pwm.stop()
-        GPIO.cleanup(self.gpio_pin)
+        logger.info("Stopping ServoMotor")
+        if self.pwm:
+            self.pwm.stop()
+            GPIO.cleanup(self.gpio_pin)
 
     def run(self):
-        """Run the commands for controlling the servo motor."""
+        """
+        Run the commands for controlling the servo motor. Initialize GPIO/PWM if necessary.
+        """
+        # Initialize GPIO and PWM when the effect is actually run
+        if self.pwm is None:
+            self._initialize_pwm()
+
         logger.info("Running ServoMotor commands")
         for command in self.commands:
             action = command[0]
 
             if action == "set_angle":
                 angle = command[1]
+                logger.info(f"Executing command: Set angle to {angle} degrees")
                 self.set_angle(angle)
 
             elif action == "stop":
+                logger.info("Executing command: Stop ServoMotor")
                 self.stop()
+
+    def __del__(self):
+        """Ensure cleanup when the object is deleted."""
+        self.stop()

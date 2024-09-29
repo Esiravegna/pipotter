@@ -1,4 +1,22 @@
-{  "close_lid": [
+{  
+  
+
+"alohomora": [
+  {
+    "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+  },
+  {
+    "ServoMotor": {
+      "gpio_pin": 18,
+      "commands" : [
+        {"command":"set_angle", "payload":{"angle": 180}},
+        {"command":"stop"}
+      ]
+    }
+  }
+],
+
+"close_lid": [
     {
       "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
@@ -12,20 +30,7 @@
       }
     }
   ],
-  "alohomora": [
-    {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
-    },
-    {
-      "ServoMotor": {
-        "gpio_pin": 18,
-        "commands" : [
-          {"command":"set_angle", "payload":{"angle": 180}},
-          {"command":"stop"}
-        ]
-      }
-    }
-  ],
+
   "arresto_momentum": [
     {
       "AudioEffect": "./media/audio/harry_potter_loop.mp3"
