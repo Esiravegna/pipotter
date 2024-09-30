@@ -1,159 +1,186 @@
-{  
+{
   
-
-"alohomora": [
-  {
-    "AudioEffect": "./media/audio/harry_potter_loop.mp3"
-  },
-  {
-    "ServoMotor": {
-      "gpio_pin": 18,
-      "commands" : [
-        {"command":"set_angle", "payload":{"angle": 180}},
-        {"command":"stop"}
-      ]
-    }
-  }
-],
-
-"close_lid": [
+  "alohomora": [
     {
       "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
     {
       "ServoMotor": {
         "gpio_pin": 18,
-        "commands" : [
-          {"command":"set_angle", "payload":{"angle": 0}},
-          {"command":"stop"}
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}},
+          {"command": "stop"}
+        ]
+      }
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[255, 223, 0]],
+                "duration_ms": 2000,
+                "loop_limit": 5
+              }
+            }
+          }
         ]
       }
     }
   ],
-
   "arresto_momentum": [
     {
       "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
     {
-      "LightEffect": {
-        "gpio_pin": "D10",
-        "num_leds": 26,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
         "commands": [
-          {"command": "fade_down"},
-          {"command": "color", "payload": {"color": "#ffff80"}},
-          {"command": "fade_up"},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "brightness", "payload": {"brightness": 75}},
-          {"command": "color", "payload": {"color": "#b3b300"}},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "fade_down"}
+          {
+            "command": "moving_dot",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[173, 216, 230]],
+                "duration_ms": 5000,
+                "loop_limit": 1,
+                "pause_a_ms": 1000,
+                "pause_b_ms": 2000
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "incendio": [
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "beats",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[255, 69, 0], [255, 140, 0], [255, 165, 0]],
+                "loop_limit": 10,
+                "duration_ms": 100,
+                "max_height": 1.0
+              }
+            }
+          }
         ]
       }
     }
   ],
   "locomotor": [
     {
-      "LightEffect": {
-        "gpio_pin": "D10",
-        "num_leds": 26,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
         "commands": [
-          {"command": "fade_down"},
-          {"command": "color", "payload": {"color": "#ffff80"}},
-          {"command": "fade_up"},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "brightness", "payload": {"brightness": 55}},
-          {"command": "color", "payload": {"color": "#9933ff"}},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "off"}
+          {
+            "command": "moving_dot",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 255, 0]],
+                "loop_limit": 10,
+                "duration_ms": 300
+              }
+            }
+          }
         ]
       }
     }
   ],
   "lumos": [
     {
-      "AudioEffect": "./media/audio/lumos_sound_effect.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
     {
-      "LightEffect": {
-        "gpio_pin": "D10",
-        "num_leds": 26,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
         "commands": [
-          {"command": "off"},
-          {"command": "color", "payload": {"color": "#e6f2ff"}},
-          {"command": "wait", "payload": {"time": 0.5}},
-          {"command": "fade_up"},
-          {"command": "color", "payload": {"color": "#ffffff"}},
-          {"command": "wait", "payload": {"time": 5}},
-          {"command": "brightness", "payload": {"brightness": 55}},
-          {"command": "fade_up"},
-          {"command": "off"}
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[255, 255, 255]],
+                "loop_limit": 1,
+                "duration_ms": 1000
+              }
+            }
+          }
         ]
       }
     }
   ],
-  "noctis": [
+  "revelio": [
     {
-      "LightEffect": {
-        "gpio_pin": "D10",
-        "num_leds": 26,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
-        "commands": [
-          {"command": "color", "payload": {"color": "#330033"}},
-          {"command": "color", "payload": {"color": "#000066"}},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "off"}
-        ]
-      }
-    }
-  ],
-  "meteojinx": [
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
     {
-      "LightEffect": {
-        "gpio_pin": "D10",
-        "num_leds": 26,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
         "commands": [
-          {"command": "off"},
-          {"command": "color", "payload": {"color": "#2d2d86"}},
-          {"command": "fade_up"},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "brightness", "payload": {"brightness": 75}},
-          {"command": "color", "payload": {"color": "#e6f2ff"}},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "off"}
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 255, 255], [255, 0, 255]],
+                "duration_ms": 2000,
+                "loop_limit": 3
+              }
+            }
+          }
         ]
       }
     }
   ],
-  "silencio": [
+  "colloportus": [
     {
-      "LightEffect": {
-        "gpio_pin": "D10",
-        "num_leds": 26,
-        "brightness": 0.5,
-        "pixel_order": "GRB",
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
         "commands": [
-          {"command": "off"},
-          {"command": "color", "payload": {"color": "#006644"}},
-          {"command": "fade_up"},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "brightness", "payload": {"brightness": 55}},
-          {"command": "color", "payload": {"color": "#00b377"}},
-          {"command": "wait", "payload": {"time": 1}},
-          {"command": "fade_down"}
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 128], [138, 43, 226]],
+                "duration_ms": 1500,
+                "loop_limit": 3,
+                "pause_ms": 500
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}},
+          {"command": "stop"}
         ]
       }
     }
-  ],
-  "wand_detected": [],
-  "pipotter_ready": []
+  ]
 }

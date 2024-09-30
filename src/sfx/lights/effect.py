@@ -279,8 +279,16 @@ class LightEffect(Effect):
     def _fire_effect(
         self, num_random: int, fire_color: tuple, fade_by: int, delay: float
     ):
-        """Run the fire effect by lighting random LEDs and fading all LEDs."""
-        while True:
+        """
+        Run the fire effect by lighting random LEDs and fading all LEDs for a duration calculated
+        based on the number of LEDs and delay.
+        """
+        num_leds = len(self.strip)  # Total number of LEDs
+        duration = (num_leds * delay) * 1.5
+        start_time = time.time()
+        while (
+            time.time() - start_time < duration
+        ):  # Run the effect for the calculated duration
             self._light_random_leds(num_random, fire_color)
             self._fade_leds(fade_by)
             self.strip.show()
@@ -298,6 +306,25 @@ class LightEffect(Effect):
             self.strip[i] = tuple(
                 min(max(channel + fade_by, 0), 255) for channel in self.strip[i]
             )
+
+    def _fade_brightness(
+        self, start_brightness: float, end_brightness: float, duration: float
+    ):
+        """Smoothly fade the brightness from start_brightness to end_brightness over the specified duration."""
+        steps = 50  # Number of steps for smooth fading
+        step_duration = duration / steps  # Time per step
+        brightness_delta = (
+            end_brightness - start_brightness
+        ) / steps  # Change in brightness per step
+
+        for step in range(steps + 1):
+            # Calculate new brightness for this step
+            new_brightness = start_brightness + (brightness_delta * step)
+            self.strip.brightness = max(
+                0, min(1, new_brightness)
+            )  # Clamp between 0 and 1
+            self.strip.show()
+            time.sleep(step_duration)
 
     def run(self):
         """Run the commands for controlling the NeoPixel strip."""

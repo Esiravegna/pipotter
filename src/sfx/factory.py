@@ -6,8 +6,9 @@ from core.error import SFXError
 # Should you add new effects, import them below and add to the available effects dict
 from sfx.audio.effect import AudioEffect
 from sfx.effect_container import EffectContainer
-from sfx.lights.effect import LightEffect
 from sfx.led.effect import LEDControl
+from sfx.lights.effect import LightEffect
+from sfx.lights_neopixelplus.effect import LightEffectsNPP
 from sfx.servomotor.effect import ServoMotor
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ class EffectFactory(object):
             self.effects_list = {
                 "AudioEffect": AudioEffect,
                 "LightEffect": LightEffect,
+                "LightEffectNPP": LightEffectsNPP,
                 "LEDControl": LEDControl,
                 "ServoMotor": ServoMotor,
             }
