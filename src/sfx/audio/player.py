@@ -23,10 +23,15 @@ class Mediaplayer(object):
         log.debug("About to play {}".format(file_to_play))
         if not exists(file_to_play):
             raise SFXError("Unable to reproduce {}".format(file_to_play))
+        extra_audio_commands = sum(
+            [cmd.split() for cmd in settings["PIPOTTER_EXTRA_AUDIO_COMMANDS"]], []
+        )
+        command = ["mplayer", file_to_play] + extra_audio_commands
+        log.debug(f"about to execute {command}")
         try:
             log.info("calling mplayer")
             self.player = subprocess.Popen(
-                ["mplayer", file_to_play] + settings["PIPOTTER_EXTRA_AUDIO_COMMANDS"],
+                command,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

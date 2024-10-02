@@ -160,6 +160,7 @@ class WandDetector(BaseDetector):
                         pt2_coords,
                         255,
                         self.TRACE_THICKNESS,
+                        lineType=cv2.LINE_AA,
                     )
                     self.last_keypoint_int_time = currentKeypointTime
             else:
@@ -337,12 +338,13 @@ class WandDetector(BaseDetector):
 
     def _crop_save_trace(self):
         """
-        Crops and resizes the detected wand trace to a standard size.
+        Crops and resizes the detected wand trace to a standard 224x224 size,
+        while preserving the aspect ratio. Pads with black if needed.
 
         Returns:
             A 224x224 numpy array representing the cropped and resized wand trace.
         """
-        # Ensure all slice indices are integers
+        # Ensure all slice indices are integers and within valid range
         upper_x = int(max(self._traceUpperCorner[0] - self.CROPPED_IMG_MARGIN, 0))
         upper_y = int(max(self._traceUpperCorner[1] - self.CROPPED_IMG_MARGIN, 0))
         lower_x = int(
@@ -352,27 +354,37 @@ class WandDetector(BaseDetector):
             min(self._traceLowerCorner[1] + self.CROPPED_IMG_MARGIN, self.frame_height)
         )
 
-        trace_width = int(lower_x - upper_x)
-        trace_height = int(lower_y - upper_y)
+        # Crop the region from the wand trace frame
+        cropped_trace = self.wand_move_tracing_frame[upper_y:lower_y, upper_x:lower_x]
 
-        size_width = size_height = 224  # Output size of the cropped image
+        # Get dimensions of the cropped image
+        trace_height, trace_width = cropped_trace.shape[:2]
 
-        if trace_height > trace_width:
-            size_height = 224
-            size_width = int(trace_width * 224 / trace_height)
-        else:
-            size_width = 224
-            size_height = int(trace_height * 224 / trace_width)
+        # Compute aspect ratio-preserving scaling factor
+        scale = min(224 / trace_width, 224 / trace_height)
 
-        clone = self.wand_move_tracing_frame.copy()
-        crop = clone[upper_y:lower_y, upper_x:lower_x]
-        resizedCroppedTrace = cv2.resize(crop, (size_width, size_height))
-        finalTraceCell = np.zeros((224, 224), np.uint8)  # 224x224 black and white image
-        finalTraceCell[
-            : resizedCroppedTrace.shape[0], : resizedCroppedTrace.shape[1]
-        ] = resizedCroppedTrace
+        # Calculate new dimensions while preserving aspect ratio
+        new_width = int(trace_width * scale)
+        new_height = int(trace_height * scale)
 
-        return finalTraceCell
+        # Resize the cropped trace to new dimensions
+        resized_cropped_trace = cv2.resize(
+            cropped_trace, (new_width, new_height), interpolation=cv2.INTER_AREA
+        )
+
+        # Create a blank 224x224 canvas (black)
+        final_trace_cell = np.zeros((224, 224), np.uint8)
+
+        # Compute padding to center the resized trace
+        pad_x = (224 - new_width) // 2
+        pad_y = (224 - new_height) // 2
+
+        # Place the resized trace in the center of the 224x224 canvas
+        final_trace_cell[pad_y : pad_y + new_height, pad_x : pad_x + new_width] = (
+            resized_cropped_trace
+        )
+
+        return final_trace_cell
 
     def _distance(self, pt1, pt2):
         """

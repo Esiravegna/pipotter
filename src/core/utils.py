@@ -42,3 +42,22 @@ def pad_to_square(im, thumbnail_size=side, color=[0, 0, 0]):
     except cv2.error:
         pass
     return squared
+
+
+def resize_with_aspect_ratio(image, size=(224, 224)):
+    h, w = image.shape[:2]
+    scale = min(size[0] / h, size[1] / w)
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+    resized_image = cv2.resize(image, (new_w, new_h))
+
+    # Padding the resized image to fit into the target size (224x224)
+    pad_w = size[1] - new_w
+    pad_h = size[0] - new_h
+    top, bottom = pad_h // 2, pad_h - pad_h // 2
+    left, right = pad_w // 2, pad_w - pad_w // 2
+    padded_image = cv2.copyMakeBorder(
+        resized_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0]
+    )
+
+    return padded_image

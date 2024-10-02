@@ -206,7 +206,9 @@ class WandDetector:
 
         # Draw the trace line on the tracing frame if there's a previous point
         if pt1:
-            cv2.line(self.wand_move_tracing_frame, pt1, pt2, 255, 2)
+            cv2.line(
+                self.wand_move_tracing_frame, pt1, pt2, 255, 2, lineType=cv2.LINE_AA
+            )
 
         # Update keypoints frame with current wand tip (visualization)
         # Optional: You can skip this visualization if it's not needed
@@ -340,45 +342,48 @@ class WandDetector:
 
         return result
 
-    def _crop_and_redraw_trace(self):
-        """
-        Generate a new clean image with the wand trace drawn, cropped to the bounding box of the trace.
-        This avoids thick lines due to multiple drawings on the same canvas.
 
-        Returns:
-            result: The newly drawn and cropped trace image.
-        """
-        cropped_trace = np.zeros((self.frame_height, self.frame_width), dtype=np.uint8)
-        # Ensure there are enough points in the trace buffer
-        if self.check_trace_validity():
-            # Get the bounding box for the trace based on the stored points
-            trace_x = [int(k.pt[0]) for k, _ in self.wand_tip_movement]
-            trace_y = [int(k.pt[1]) for k, _ in self.wand_tip_movement]
-            upper_left = (max(min(trace_x) - 10, 0), max(min(trace_y) - 10, 0))
-            lower_right = (
-                min(max(trace_x) + 10, self.frame_width),
-                min(max(trace_y) + 10, self.frame_height),
+def _crop_and_redraw_trace(self):
+    """
+    Generate a new clean image with the wand trace drawn, cropped to the bounding box of the trace.
+    This avoids thick lines due to multiple drawings on the same canvas.
+
+    Returns:
+        result: The newly drawn and cropped trace image.
+    """
+    cropped_trace = np.zeros((self.frame_height, self.frame_width), dtype=np.uint8)
+
+    # Ensure there are enough points in the trace buffer
+    if self.check_trace_validity():
+        # Get the bounding box for the trace based on the stored points
+        trace_x = [int(k.pt[0]) for k, _ in self.wand_tip_movement]
+        trace_y = [int(k.pt[1]) for k, _ in self.wand_tip_movement]
+        upper_left = (max(min(trace_x) - 10, 0), max(min(trace_y) - 10, 0))
+        lower_right = (
+            min(max(trace_x) + 10, self.frame_width),
+            min(max(trace_y) + 10, self.frame_height),
+        )
+
+        # Create a blank canvas for the cropped area
+        crop_width = lower_right[0] - upper_left[0]
+        crop_height = lower_right[1] - upper_left[1]
+        cropped_trace = np.zeros((crop_height, crop_width), dtype=np.uint8)
+
+        # Redraw the trace lines on the new canvas
+        for i in range(1, len(self.wand_tip_movement)):
+            pt1 = (
+                int(self.wand_tip_movement[i - 1][0].pt[0]) - upper_left[0],
+                int(self.wand_tip_movement[i - 1][0].pt[1]) - upper_left[1],
+            )
+            pt2 = (
+                int(self.wand_tip_movement[i][0].pt[0]) - upper_left[0],
+                int(self.wand_tip_movement[i][0].pt[1]) - upper_left[1],
             )
 
-            # Create a blank canvas for the cropped area
-            crop_width = lower_right[0] - upper_left[0]
-            crop_height = lower_right[1] - upper_left[1]
-            cropped_trace = np.zeros((crop_height, crop_width), dtype=np.uint8)
+            # Draw a thin line on the clean canvas (with antialiasing for smooth lines)
+            cv2.line(cropped_trace, pt1, pt2, 255, 2, lineType=cv2.LINE_AA)
 
-            # Draw the trace lines based on the buffered points on this new canvas
-            for i in range(1, len(self.wand_tip_movement)):
-                pt1 = (
-                    int(self.wand_tip_movement[i - 1][0].pt[0]) - upper_left[0],
-                    int(self.wand_tip_movement[i - 1][0].pt[1]) - upper_left[1],
-                )
-                pt2 = (
-                    int(self.wand_tip_movement[i][0].pt[0]) - upper_left[0],
-                    int(self.wand_tip_movement[i][0].pt[1]) - upper_left[1],
-                )
-
-                # Draw a thin line on the clean canvas
-                cv2.line(cropped_trace, pt1, pt2, 255, 2)
-        return cropped_trace
+    return cropped_trace
 
     def _crop_trace(self):
         """

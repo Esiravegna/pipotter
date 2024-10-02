@@ -10,6 +10,7 @@ from sfx.led.effect import LEDControl
 from sfx.lights.effect import LightEffect
 from sfx.lights_neopixelplus.effect import LightEffectsNPP
 from sfx.servomotor.effect import ServoMotor
+from sfx.utils.effect import UtilEffect
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class EffectFactory(object):
                     },
                     "use_pwm": true,
                     "commands": [
-                        {"command": "set_brightness", "payload": {"led": "led1", "brightness": 50}},
+                        {"command": "turn_on", "payload": {"led": "led1"}},
                         {"command": "turn_off", "payload": {"led": "led2"}}
                     ]
                 }},
@@ -85,6 +86,7 @@ class EffectFactory(object):
                 "LightEffectNPP": LightEffectsNPP,
                 "LEDControl": LEDControl,
                 "ServoMotor": ServoMotor,
+                "UtilEffect": UtilEffect,
             }
         else:
             self.effects_list = effects_list

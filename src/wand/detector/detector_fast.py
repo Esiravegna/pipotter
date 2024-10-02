@@ -195,6 +195,7 @@ class WandDetector(BaseDetector):
                         pt2_coords,
                         255,
                         self.TRACE_THICKNESS,
+                        lineType=cv2.LINE_AA,
                     )
                     self.last_keypoint_int_time = currentKeypointTime
             else:

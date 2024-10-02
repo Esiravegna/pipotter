@@ -1,7 +1,7 @@
 {
   "alohomora": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop_3.mp3"
     },
     {
       "ServoMotor": {
@@ -43,7 +43,7 @@
   ],
   "arresto_momentum": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop_3.mp3"
     },
     {
       "LightEffectNPP": {
@@ -78,7 +78,7 @@
   ],
   "incendio": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/incendio_sound_effect.mp3"
     },
     {
       "LightEffectNPP": {
@@ -112,7 +112,7 @@
   ],
   "locomotor": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/locomotor_sound_effect.mp3"
     },
     {
       "LightEffectNPP": {
@@ -145,7 +145,7 @@
   ],
   "lumos": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop_1.mp3"
     },
     {
       "LightEffectNPP": {
@@ -157,7 +157,7 @@
             "payload": {
               "customization_json": {
                 "rgb_colors": [[255, 255, 255]],
-                "loop_limit": 1,
+                "loop_limit": 2,
                 "duration_ms": 1000
               }
             }
@@ -178,7 +178,7 @@
   ],
   "revelio": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop_2.mp3"
     },
     {
       "LightEffectNPP": {
@@ -211,7 +211,7 @@
   ],
   "colloportus": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop_4.mp3"
     },
     {
       "LightEffectNPP": {
@@ -251,5 +251,59 @@
         ]
       }
     }
+  ],
+  "pipotter_ready": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}},
+          {"command": "stop"}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop_1.mp3"
+    },
+    {
+      "LEDControl": {
+      "led_pins": {
+          "red": 25,
+          "yellow":24,
+          "green": 23
+      },
+      "commands": [
+          {"command": "turn_on", "payload": {"led": "green"}},
+          {"command": "turn_off", "payload": {"led": "yellow"}},
+          {"command": "turn_off", "payload": {"led": "red"}}
+      ]
+   }},
+  {"UtilEffect": {
+    "commands": [
+      {"command": "wait", "payload": {"seconds": 5}}
+  ]
+  }},
+  {
+    "ServoMotor": {
+      "gpio_pin": 18,
+      "commands": [
+        {"command": "set_angle", "payload": {"angle": 0}},
+        {"command": "stop"}
+      ]
+    }
+  },
+  {
+    "LEDControl": {
+    "led_pins": {
+        "red": 25,
+        "yellow":24,
+        "green": 23
+    },
+    "commands": [
+        {"command": "turn_off", "payload": {"led": "green"}},
+        {"command": "turn_off", "payload": {"led": "yellow"}},
+        {"command": "turn_off", "payload": {"led": "red"}}
+    ]
+  }}
   ]
 }
