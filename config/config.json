@@ -193,7 +193,8 @@
           }
         ]
       }
-    },    {
+    },    
+    {
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
@@ -210,6 +211,12 @@
         "commands": [
           {"command": "set_angle", "payload": {"angle": 180}},
           {"command": "stop"}
+        ]
+      }
+    },{
+      "UtilEffect": {
+        "commands": [
+          {"command": "wait", "payload": {"seconds": 0.1}} 
         ]
       }
     },

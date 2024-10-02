@@ -17,10 +17,10 @@ class WandDetector(BaseDetector):
     OUTPUT_SIZE = 224  # Output image size for the spell representation
 
     def __init__(self, video):
-
         self.video = video
         self.tracePoints = []
         self.cameraFrame = None
+        self.prev_cameraFrame = None  # Store the previous frame for optical flow
         self.last_keypoint_int_time = None
 
         # Feature parameters for goodFeaturesToTrack (from Shi-Tomasi corner detection)
@@ -28,11 +28,18 @@ class WandDetector(BaseDetector):
             maxCorners=100, qualityLevel=0.3, minDistance=7, blockSize=7
         )
 
+        # Parameters for Lucas-Kanade Optical Flow
+        self.lk_params = dict(
+            winSize=(15, 15),
+            maxLevel=2,
+            criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03),
+        )
+
         self.bgsub = cv2.createBackgroundSubtractorMOG2()  # Background subtractor
 
     def detect_wand(self, frame):
         """
-        Detects the wand movement in the given frame and updates the trace.
+        Detects and tracks the wand movement in the given frame using Optical Flow.
 
         Args:
             frame: The current grayscale video frame to be processed.
@@ -46,40 +53,65 @@ class WandDetector(BaseDetector):
             self.cameraFrame, self.cameraFrame, mask=fgmask
         )
 
-        # Detect points using goodFeaturesToTrack (from Shi-Tomasi)
-        points = cv2.goodFeaturesToTrack(
-            bgSubbedCameraFrame, mask=None, **self.feature_params
-        )
+        if self.tracePoints is None or len(self.tracePoints) == 0:
+            # Initialize points using Shi-Tomasi corner detection (goodFeaturesToTrack)
+            self.tracePoints = cv2.goodFeaturesToTrack(
+                bgSubbedCameraFrame, mask=None, **self.feature_params
+            )
+        else:
+            # Use Optical Flow to track the points in the next frame
+            next_points, status, error = cv2.calcOpticalFlowPyrLK(
+                self.prev_cameraFrame,
+                self.cameraFrame,
+                self.tracePoints,
+                None,
+                **self.lk_params
+            )
 
-        if points is not None:
-            currentKeypointTime = time.time()
-            if len(self.tracePoints) > 0:
-                # Calculate speed by measuring the distance between the last keypoint and the current one
-                elapsed = currentKeypointTime - self.last_keypoint_int_time
-                pt1 = self.tracePoints[-1]
-                pt2 = points[0]
-                distance = self._distance(pt1, pt2)
-                speed = distance / elapsed
+            # Filter out the good points based on the status output
+            good_new = next_points[status == 1]
+            good_old = self.tracePoints[status == 1]
 
-                # Append the current point if it is moving below the maximum trace speed
-                if speed < self.MAX_TRACE_SPEED:
-                    self.tracePoints.append(pt2)
+            # Update points if tracking is successful
+            if len(good_new) > 0:
+                currentKeypointTime = time.time()
+                if len(self.tracePoints) > 0:
+                    # Calculate speed by measuring the distance between the last and current point
+                    elapsed = currentKeypointTime - self.last_keypoint_int_time
+                    pt1 = good_old[-1]
+                    pt2 = good_new[-1]
+                    distance = self._distance(pt1, pt2)
+                    speed = distance / elapsed
+
+                    # Append the current point if it is moving below the maximum trace speed
+                    if speed < self.MAX_TRACE_SPEED:
+                        self.tracePoints = good_new.reshape(-1, 1, 2)
+                        self.last_keypoint_int_time = currentKeypointTime
+
+                        # Optionally, draw trace (line) between points
+                        for i, (new, old) in enumerate(zip(good_new, good_old)):
+                            a, b = new.ravel()
+                            c, d = old.ravel()
+                            cv2.line(
+                                self.cameraFrame,
+                                (int(a), int(b)),
+                                (int(c), int(d)),
+                                (255, 0, 0),
+                                thickness=self.TRACE_THICKNESS,
+                            )
+                else:
+                    # First keypoint initialization after optical flow
+                    self.tracePoints = good_new.reshape(-1, 1, 2)
                     self.last_keypoint_int_time = currentKeypointTime
 
-                    # Optionally, draw trace (line) between points
-                    pt1_coords = (int(pt1[0]), int(pt1[1]))
-                    pt2_coords = (int(pt2[0]), int(pt2[1]))
-                    cv2.line(
-                        self.cameraFrame,
-                        pt1_coords,
-                        pt2_coords,
-                        (255, 0, 0),
-                        thickness=self.TRACE_THICKNESS,
-                    )
             else:
-                # First keypoint initialization
-                self.tracePoints.append(points[0])
-                self.last_keypoint_int_time = currentKeypointTime
+                # If tracking fails, reinitialize points using Shi-Tomasi
+                self.tracePoints = cv2.goodFeaturesToTrack(
+                    bgSubbedCameraFrame, mask=None, **self.feature_params
+                )
+
+        # Update the previous frame for the next call
+        self.prev_cameraFrame = self.cameraFrame.copy()
 
     def _distance(self, pt1, pt2):
         """Compute Euclidean distance between two points."""
@@ -88,15 +120,13 @@ class WandDetector(BaseDetector):
     def reset(self):
         """Reset the trace points and start fresh."""
         self.tracePoints = []
+        self.prev_cameraFrame = None  # Clear the previous frame
 
     def check_trace_validity(self):
         """
         Checks if the current trace is valid based on specific criteria (such as length, speed, etc.).
         """
-        result = False
-        if len(self.tracePoints) > self.POINTS_BUFFER_SIZE:
-            result = True
-        return result
+        return len(self.tracePoints) > self.POINTS_BUFFER_SIZE
 
     def superimpose_trace_and_debug_info(self, frame):
         """

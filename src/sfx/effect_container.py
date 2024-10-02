@@ -1,5 +1,4 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor
 from sfx.effect import Effect
 
 logger = logging.getLogger(__name__)
@@ -16,26 +15,23 @@ class EffectContainer:
         Just creates an empty container
         """
         self.queue = []
-        self.tasks = ThreadPoolExecutor(max_workers=2)
 
     def run(self):
         """
-        Runs all the effects in the sequence
-        :return: True on all the effects completed, False otherwise
+        Runs all the effects in the sequence, one after the other.
+        :return: True if all effects completed, False otherwise
         """
         failed = 0
-        logger.info("Running all the stored effects")
+        logger.info("Running all the stored effects sequentially")
+
         if self.queue:
-            # Concurrency babe!
             for an_effect in self.queue:
                 try:
-                    f = self.tasks.submit(an_effect.run).result()
-                except (ValueError, NotImplemented, IOError) as e:
-                    logger.error(
-                        "unable to run {} due to {} by {}".format(an_effect, e, r)
-                    )
+                    an_effect.run()  # Run each effect sequentially
+                except (ValueError, NotImplementedError, IOError, Exception) as e:
+                    logger.error("unable to run {} due to {}".format(an_effect, e))
                     failed += 1
-        logger.debug("All run with {} failed".format(failed))
+        logger.debug("All effects ran with {} failures".format(failed))
         return not failed
 
     def __len__(self):
