@@ -1,22 +1,24 @@
+from queue import Queue, Full
+import threading
 import logging
 import cv2
 from picamera2 import Picamera2
-from threading import Thread
+from media.video_source.video_source import VideoSource
 
 logger = logging.getLogger(__name__)
 
 
-class PiCameraCV(object):
+class PiCameraCV(VideoSource):
     """
     An OpenCV VideoCapture wrapper for PiCamera2 for headless systems, using grayscale images.
     """
 
-    def __init__(self, resolution=(640, 480), flip=False):
+    def __init__(self, resolution=(640, 480), flip=False, queue_size=2):
         """
-        The constructor
+        Initialize the PiCamera with a frame queue for concurrent access.
         :param resolution: tuple of (width, height) to set the camera resolution
-        :param framerate: int, the frame rate of the camera
-        :param flip: list of indices to run the cv2 flip command. Empty to not run anything
+        :param flip: whether to flip the captured images
+        :param queue_size: max number of frames to buffer in the queue
         """
         self.camera = Picamera2()
         config = self.camera.create_video_configuration(main={"size": resolution})
@@ -26,7 +28,7 @@ class PiCameraCV(object):
             {
                 "AeEnable": True,
                 "AwbEnable": False,  # Disable auto white balance
-                "ColourGains": (1.5, 1.0),  # , # Adjust gains for IR sensitivity
+                "ColourGains": (1.5, 1.0),  # Adjust gains for IR sensitivity
                 "FrameDurationLimits": (
                     30000,
                     30000,
@@ -34,42 +36,48 @@ class PiCameraCV(object):
             }
         )
         self.camera.start()
+
         self.flip = flip
-        self.resolution = resolution
-        # Initialize the frame and the variable used to indicate
-        # if the thread should be stopped
-        self.frame = None
+        self.frame_queue = Queue(maxsize=queue_size)
         self.stopped = False
-        Thread(target=self.update, args=()).start()
+
+        self.capture_thread = threading.Thread(target=self.update, args=())
+        self.capture_thread.daemon = True
+        self.capture_thread.start()
 
     def update(self):
-        # Keep looping infinitely until the thread is stopped
+        """Continuously capture frames, convert to grayscale, and store them into the queue."""
         while not self.stopped:
-            # Capture an image
-            self.frame = self.camera.capture_array()
-            logger.debug(f"Captured frame shape: {self.frame.shape}")
+            frame = self.camera.capture_array()
+
+            # Convert frame to grayscale
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            # Apply flip if needed
+            if self.flip:
+                gray_frame = cv2.flip(gray_frame, 1)
+            try:
+                self.frame_queue.put_nowait(gray_frame)
+            except Full:
+                pass
 
     def read(self):
         """
-        Read a frame from the camera.
-        :return: (boolean, cv2Image) captured from the camera, or False, None on error as per the read cv2 VideoCapture command
+        Retrieve the latest frame from the queue.
+        :return: (boolean, frame) where boolean indicates success, and frame is the latest captured frame.
         """
-        frame, ret = None, False
-        if self.frame is None:
-            logger.error("self.frame is None, waiting for camera update.")
-        else:
-            try:
-                frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-                # Let's flip the images as needed
-                if self.flip:
-                    frame = cv2.flip(frame, 1)
-                ret = True
-            except Exception as e:
-                logger.error(
-                    "Unable to read from PiCamera due to {} reading {}".format(e, frame)
-                )
-        return ret, frame
+        try:
+            if not self.frame_queue.empty():
+                frame = self.frame_queue.get()
+                return True, frame
+            else:
+                logger.warning("No frames available in the queue.")
+                return False, None
+        except Exception as e:
+            logger.error(f"Error reading frame from PiCamera: {e}")
+            return False, None
 
     def end(self):
+        """Stop the camera and the frame capture thread."""
         self.stopped = True
         self.camera.stop()

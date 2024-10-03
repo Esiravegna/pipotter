@@ -54,7 +54,14 @@ print(BANNER)
     help="Where to read the configuration file. Defaults to ./config.json",
     default="./config/config.json",
 )
-def run_command(video_source, video_file, save_images_directory, config_file):
+@click.option(
+    "--webserver/--no-webserver",
+    default=True,
+    help="Whether to start the FastAPI webserver or not",
+)
+def run_command(
+    video_source, video_file, save_images_directory, config_file, webserver
+):
     """
     The main method.
     Initializes the PiPotterController and runs the FastAPI app.
@@ -77,13 +84,16 @@ def run_command(video_source, video_file, save_images_directory, config_file):
     # Horrid hack
     set_pipotter(PiPotter)
 
-    # Start FastAPI app using Uvicorn
-    uvicorn.run(
-        "src.core.controller:app",
-        host="0.0.0.0",
-        port=8000,
-        log_level=settings["PIPOTTER_LOGLEVEL"].lower(),
-    )
+    if webserver:
+        logger.info("Starting FastAPI web server...")
+        uvicorn.run(
+            "src.core.controller:app",
+            host="0.0.0.0",
+            port=8000,
+            log_level=settings["PIPOTTER_LOGLEVEL"].lower(),
+        )
+    else:
+        logger.info("Webserver not started. Running without FastAPI.")
 
 
 if __name__ == "__main__":
