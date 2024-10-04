@@ -177,9 +177,9 @@ class LightEffectsNPP(Effect):
                         )
                     )
                 elif action == "color":
-                    self.strip.beats(
+                    self.strip.color(
                         customization_json=payload.get(
-                            "customization_json", {"rgb_color": [100, 200, 200]}
+                            "customization_json", {"rgb_colors": [[100, 200, 200]]}
                         )
                     )
                 elif action == "off":

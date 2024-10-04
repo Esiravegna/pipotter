@@ -8,7 +8,7 @@ settings = {
     # Loglevel read from the env
     "PIPOTTER_LOGLEVEL": getenv("PIPOTTER_LOGLEVEL", "INFO"),
     # Extra audios should these be needed. For instance, the default allows a USB soundcard attached to ALSA.
-    "PIPOTTER_EXTRA_AUDIO_COMMANDS": ["-volume", "35"],
+    "PIPOTTER_EXTRA_AUDIO_COMMANDS": ["-volume", "15"],
     # Flip list, as per all the video_source objects
     "PIPOTTER_FLIP_VIDEO": getenv("PIPOTTER_FLIP_VIDEO", [2]),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
