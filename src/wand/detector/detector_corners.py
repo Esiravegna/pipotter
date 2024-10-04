@@ -68,7 +68,6 @@ class WandDetector(BaseDetector):
                 None,
                 **self.lk_params
             )
-
             # Filter out the good points based on the status output
             good_new = next_points[status == 1]
             good_old = self.tracePoints[status == 1]
@@ -209,9 +208,3 @@ class WandDetector(BaseDetector):
             )
             result = resized_cropped_frame
         return result
-
-    def play_wand_detected_sound():
-        subprocess.call(["mplayer", "media/protego.mp3"])
-
-    def play_wand_lost_sound():
-        subprocess.call(["mplayer", "media/whoosh.mp3"])

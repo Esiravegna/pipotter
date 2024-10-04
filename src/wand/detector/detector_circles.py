@@ -113,7 +113,9 @@ class WandDetector(BaseDetector):
         speed = 0
         fgmask = self.bgsub.apply(self.cameraFrame)
         bgSubbedCameraFrame = cv2.bitwise_and(self.cameraFrame, fgmask)
-
+        if self.tracePoints is None or len(self.tracePoints) == 0:
+            # Wand detected for the first time: Play sound cue
+            self.play_wand_detected_sound()
         # Detect blobs
         self.blobKeypoints = list(self._blobDetector.detect(bgSubbedCameraFrame))
         # Detect circles using Hough Circle Transform

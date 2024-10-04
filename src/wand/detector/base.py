@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import subprocess
+from sfx.audio.effect import AudioEffect
 
 
 class BaseDetector(ABC):
@@ -35,3 +37,19 @@ class BaseDetector(ABC):
         Return the current spell trace representation, either as a set of points or an image.
         """
         pass
+
+    def play_wand_detected_sound(
+        self, effect=AudioEffect(the_filename="./media/audio/protego.mp3")
+    ):
+        """
+        When a wand is detected
+        """
+        effect.run()
+
+    def play_wand_lost_sound(
+        self, effect=AudioEffect(the_filename="./media/audio/whoosh.mp3")
+    ):
+        """
+        When a wand is lost
+        """
+        effect.run()

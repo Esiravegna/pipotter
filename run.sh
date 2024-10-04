@@ -8,6 +8,6 @@ echo "Virtual environment '$ENV_DIR' : ✅"
 echo "Info: Activating virtual environment..."
 source "$ENV_DIR/bin/activate"
 echo "...✅"
-python run.py "$@"
+PULSE_SERVER="/run/pulse/native" python run.py "$@"
 deactivate
 
