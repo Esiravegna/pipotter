@@ -2,7 +2,7 @@ import cv2
 import logging
 import numpy as np
 import os
-
+from collections import deque
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -45,7 +45,7 @@ class PiPotterController:
         flip = settings["PIPOTTER_FLIP_VIDEO"]
         self.spell_frame = np.zeros((224, 224), np.uint8)
         self.latest_predictions = {}
-
+        self.spell_history = deque(maxlen=settings.get("PIPOTTER_SPELL_HISTORY_SIZE"))
         if video_source_name not in VALID_SOURCES:
             raise ValueError(
                 f"Invalid controller name: {video_source_name}. Must be one of: {VALID_SOURCES}"
@@ -70,7 +70,9 @@ class PiPotterController:
         self.save_images_directory = kwargs.get("save_images_directory", None)
 
         logger.debug("Initializing WandDetector")
-        self.wand_detector = get_detector(detector_type="circles", video=self.video)
+        self.wand_detector = get_detector(
+            detector_type="optical_flow", video=self.video
+        )
 
         logger.debug("Initializing SpellNet")
         self.spell_net = SpellNet()
@@ -163,6 +165,17 @@ class PiPotterController:
         if spell_name != settings["PIPOTTER_NO_SPELL_LABEL"]:
             logger.info(f"Running effect for spell {spell_name}")
             self.effects[spell_name].run()
+            self.spell_history.append(spell_name)  # Store the last spell run
+            if (
+                len(self.spell_history) == self.spell_history.maxlen
+            ):  # Is the story full?
+                if len(self.spell_history) == len(
+                    set(self.spell_history)
+                ):  # all the spells are different?
+                    self.effects[
+                        settings["PIPOTTER_TRIWIZARD_SPELL_NAME"]
+                    ].run()  # YOU'RE THE CHAMPION
+                    self.spell_history.clear()
         else:
             logger.debug("No spell detected")
         self.wand_detector.reset()

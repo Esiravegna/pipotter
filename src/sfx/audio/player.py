@@ -32,14 +32,9 @@ class Mediaplayer(object):
         )
 
         # Construct the ffplay command
-        command = [
-            "ffplay",
-            "-nodisp",
-            "-autoexit",
-            file_to_play,
-        ] + extra_audio_commands
-
-        log.debug(f"Final ffplay command: {' '.join(command)}")
+        command = ["ffplay", "-nodisp", "-autoexit"] + extra_audio_commands
+        command.append(file_to_play)
+        log.info(f"Final ffplay command: {' '.join(command)}")
 
         try:
             log.info("Calling ffplay")

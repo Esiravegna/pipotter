@@ -8,7 +8,7 @@ settings = {
     # Loglevel read from the env
     "PIPOTTER_LOGLEVEL": getenv("PIPOTTER_LOGLEVEL", "INFO"),
     # Extra audios should these be needed. For instance, the default allows a USB soundcard attached to ALSA.
-    "PIPOTTER_EXTRA_AUDIO_COMMANDS": ["-volume", "15"],
+    "PIPOTTER_EXTRA_AUDIO_COMMANDS": ["-volume", "35"],
     # Flip list, as per all the video_source objects
     "PIPOTTER_FLIP_VIDEO": getenv("PIPOTTER_FLIP_VIDEO", [2]),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
@@ -22,7 +22,10 @@ settings = {
     # Threshold to trigger a positive detection. If it is lower than this, we will not trigger an effect.
     # This should be at least 1/the number of possible spells. In this case, we've six. please take a look at
     # the media/spell_net2/spell_net.ipynb file
-    "PIPOTTER_THRESHOLD_TRIGGER": 0.65,
+    "PIPOTTER_THRESHOLD_TRIGGER": 0.49,
+    # Lenght of buffer size"
+    "PIPOTTER_SPELL_HISTORY_SIZE": 2,
+    "PIPOTTER_TRIWIZARD_SPELL_NAME": "triwizard_cup",
     # How do we cann a label for no spell detected? defaults to background. It cannot be any of the spells already existing
     "PIPOTTER_NO_SPELL_LABEL": getenv("PIPOTTER_NO_SPELL_LABEL", "background"),
     # Optionally, we will use a remote SpellNET server?

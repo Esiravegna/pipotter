@@ -1,28 +1,30 @@
 import cv2
 import logging
 import numpy as np
-import subprocess
 import time
+import math
 from wand.detector.base import BaseDetector
 from core.utils import resize_with_aspect_ratio
 
 logger = logging.getLogger(__name__)
-cv2.setUseOptimized(True)
 
 
 class WandDetector(BaseDetector):
     POINTS_BUFFER_SIZE = 20
     TRACE_THICKNESS = 3
-    MAX_TRACE_SPEED = 400  # pixels/second
+    MAX_TRACE_SPEED = 250  # pixels/second
     CROPPED_IMG_MARGIN = 10  # pixels
     OUTPUT_SIZE = 224  # Output image size for the spell representation
 
-    def __init__(self, **kwargs):
+    def __init__(self, video):
+        self.video = video
+        frame = self.get_valid_frame()
+        self.frame_height, self.frame_width = frame.shape  # Get frame shape
         self.tracePoints = []
         self.cameraFrame = None
         self.prev_cameraFrame = None  # Store the previous frame for optical flow
         self.last_keypoint_int_time = None
-
+        self.latest_wand_frame = np.zeros((frame.shape), np.uint8)
         # Feature parameters for goodFeaturesToTrack (from Shi-Tomasi corner detection)
         self.feature_params = dict(
             maxCorners=100, qualityLevel=0.3, minDistance=7, blockSize=7
@@ -36,7 +38,21 @@ class WandDetector(BaseDetector):
         )
 
         self.bgsub = cv2.createBackgroundSubtractorMOG2()  # Background subtractor
-        # self.bgsub = cv2.createBackgroundSubtractorKNN(detectShadows=False)
+
+    def get_valid_frame(self):
+        """
+        Continuously read frames from the video source until a valid frame is obtained.
+
+        Returns:
+            frame: A valid frame from the video source.
+        """
+        while True:
+            ret, frame = self.video.read()
+            if ret:
+                return frame
+            else:
+                logger.warning("Failed to get a valid frame. Retrying...")
+                time.sleep(0.1)  # Optional: short delay before retrying
 
     def detect_wand(self, frame):
         """
@@ -66,8 +82,9 @@ class WandDetector(BaseDetector):
                 self.cameraFrame,
                 self.tracePoints,
                 None,
-                **self.lk_params
+                **self.lk_params,
             )
+
             # Filter out the good points based on the status output
             good_new = next_points[status == 1]
             good_old = self.tracePoints[status == 1]
@@ -75,7 +92,11 @@ class WandDetector(BaseDetector):
             # Update points if tracking is successful
             if len(good_new) > 0:
                 currentKeypointTime = time.time()
-                if len(self.tracePoints) > 0:
+
+                if self.last_keypoint_int_time is None:
+                    # On the first frame, just initialize the keypoint time
+                    self.last_keypoint_int_time = currentKeypointTime
+                else:
                     # Calculate speed by measuring the distance between the last and current point
                     elapsed = currentKeypointTime - self.last_keypoint_int_time
                     pt1 = good_old[-1]
@@ -88,55 +109,28 @@ class WandDetector(BaseDetector):
                         self.tracePoints = good_new.reshape(-1, 1, 2)
                         self.last_keypoint_int_time = currentKeypointTime
 
-                        # Optionally, draw trace (line) between points
-                        for i, (new, old) in enumerate(zip(good_new, good_old)):
-                            a, b = new.ravel()
-                            c, d = old.ravel()
-                            cv2.line(
-                                self.cameraFrame,
-                                (int(a), int(b)),
-                                (int(c), int(d)),
-                                (255, 0, 0),
-                                thickness=self.TRACE_THICKNESS,
-                            )
-                else:
-                    # First keypoint initialization after optical flow
+                # If this is the first initialization of the points
+                if len(self.tracePoints) == 0:
                     self.tracePoints = good_new.reshape(-1, 1, 2)
                     self.last_keypoint_int_time = currentKeypointTime
+
             else:
-                # If tracking fails, reinitialize points using Shi-Tomasi, but keep recent points
-                new_trace_points = cv2.goodFeaturesToTrack(
+                # If tracking fails, reinitialize points using Shi-Tomasi
+                self.tracePoints = cv2.goodFeaturesToTrack(
                     bgSubbedCameraFrame, mask=None, **self.feature_params
                 )
-                if new_trace_points is not None:
-                    # Append new points to the existing buffer (if they exist), but limit the buffer size
-                    if self.tracePoints is not None:
-                        self.tracePoints = np.concatenate(
-                            (self.tracePoints, new_trace_points)
-                        )
-                    else:
-                        self.tracePoints = new_trace_points
-        # Limit the buffer size to the defined POINTS_BUFFER_SIZE
-        if len(self.tracePoints) > self.POINTS_BUFFER_SIZE:
-            self.tracePoints = self.tracePoints[
-                -self.POINTS_BUFFER_SIZE :
-            ]  # Keep the last N points
 
         # Update the previous frame for the next call
         self.prev_cameraFrame = self.cameraFrame.copy()
 
+        # Generate the latest wand frame with tracing, keypoints, speed, and debug info
+        self.latest_wand_frame = self.superimpose_trace_and_debug_info(
+            self.cameraFrame, bgSubbedCameraFrame, self.tracePoints, speed
+        )
+
     def _distance(self, pt1, pt2):
         """Compute Euclidean distance between two points."""
-        return np.linalg.norm(np.array(pt1) - np.array(pt2))
-
-    def smooth_trace(self, points, window_size=3):
-        """Applies a moving average filter to smooth the trace points."""
-        smoothed_points = []
-        for i in range(len(points)):
-            window = points[max(0, i - window_size + 1) : i + 1]
-            avg_point = np.mean(window, axis=0)
-            smoothed_points.append(avg_point)
-        return np.array(smoothed_points)
+        return math.sqrt((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2)
 
     def reset(self):
         """Reset the trace points and start fresh."""
@@ -149,62 +143,122 @@ class WandDetector(BaseDetector):
         """
         return len(self.tracePoints) > self.POINTS_BUFFER_SIZE
 
-    def superimpose_trace_and_debug_info(self, frame):
+    def superimpose_trace_and_debug_info(
+        self, video_frame, tracing_frame, keypoints, speed, alpha=0.6
+    ):
         """
-        Draws the trace and debug information on the frame for visualization.
+        Superimpose the wand trace, detected keypoints, and debug information onto the current video frame.
+
+        Args:
+            video_frame: The original video frame to display.
+            tracing_frame: The frame containing the wand trace.
+            keypoints: The list of detected keypoints.
+            speed: The speed of the wand movement.
+            alpha: Transparency factor for the overlay.
+
+        Returns:
+            The combined frame with trace, keypoints, and debug information.
         """
-        for i in range(1, len(self.tracePoints)):
-            pt1 = self.tracePoints[i - 1]
-            pt2 = self.tracePoints[i]
-            pt1_coords = (int(pt1[0]), int(pt1[1]))
-            pt2_coords = (int(pt2[0]), int(pt2[1]))
-            cv2.line(
-                frame,
-                pt1_coords,
-                pt2_coords,
-                (0, 255, 0),
-                thickness=self.TRACE_THICKNESS,
+        # Ensure both frames have the same dimensions
+        if tracing_frame.shape[:2] != video_frame.shape[:2]:
+            tracing_frame = cv2.resize(
+                tracing_frame, (video_frame.shape[1], video_frame.shape[0])
             )
+
+        # Convert tracing frame to a 3-channel BGR image if it's not already
+        if len(tracing_frame.shape) == 2:  # Single channel image
+            tracing_frame_bgr = cv2.cvtColor(tracing_frame, cv2.COLOR_GRAY2BGR)
+        elif len(tracing_frame.shape) == 3 and tracing_frame.shape[2] == 1:
+            tracing_frame_bgr = cv2.cvtColor(tracing_frame[:, :, 0], cv2.COLOR_GRAY2BGR)
+        else:
+            tracing_frame_bgr = tracing_frame
+
+        # Convert video frame to BGR if it's a single channel image
+        if len(video_frame.shape) == 2 or video_frame.shape[2] == 1:
+            video_frame_bgr = cv2.cvtColor(video_frame, cv2.COLOR_GRAY2BGR)
+        else:
+            video_frame_bgr = video_frame
+
+        # Create colored trace overlay
+        colored_trace = np.zeros_like(tracing_frame_bgr)
+        colored_trace[:, :, 2] = tracing_frame_bgr[:, :, 0]  # Red channel for trace
+
+        # Add keypoints to colored_trace
+        for keypoint in keypoints:
+            pt = (int(keypoint[0][0]), int(keypoint[0][1]))
+            cv2.circle(
+                colored_trace, pt, 5, (0, 255, 0), 3
+            )  # Green circles for keypoints
+
+        # Combine the video frame with the trace and keypoints
+        combined_frame = cv2.addWeighted(video_frame_bgr, 1.0, colored_trace, alpha, 0)
+
+        # Add debug information
+        if speed != -1:
+            cv2.putText(
+                combined_frame,
+                f"Speed: {speed:.2f} px/s",
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 255),
+                1,
+            )
+            cv2.putText(
+                combined_frame,
+                f"Points: {len(self.tracePoints)}",
+                (10, 50),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 250),
+                1,
+            )
+            cv2.putText(
+                combined_frame,
+                f"Time: {time.strftime('%H:%M:%S')}",
+                (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 250),
+                1,
+            )
+
+        return combined_frame
 
     def get_a_spell_maybe(self):
         """
         Placeholder method to determine if the trace forms a spell. This could involve analyzing the pattern.
         """
         result = np.zeros((224, 224), np.uint8)
-        smoothed_trace_points = self.smooth_trace(self.tracePoints)
         if self.check_trace_validity():
-            result = self._crop_save_trace(smoothed_trace_points)
+            result = self._crop_save_trace(self.cameraFrame)
         return result
 
-    def _update_trace_boundaries(self, trace_points=None):
+    def _update_trace_boundaries(self):
         """
         Update the bounding box around the trace points for cropping and saving the trace.
         """
-        # If no trace points are passed, use self.tracePoints
-        trace_points = self.tracePoints if trace_points is None else trace_points
-        result = none
-        if len(trace_points) > 0:
-            xs = [pt[0] for pt in trace_points]
-            ys = [pt[1] for pt in trace_points]
+        if len(self.tracePoints) > 0:
+            # Since self.tracePoints is likely a NumPy array of shape (N, 1, 2), adjust the access
+            xs = [pt[0][0] for pt in self.tracePoints]
+            ys = [pt[0][1] for pt in self.tracePoints]
             x_min = min(xs) - self.CROPPED_IMG_MARGIN
             x_max = max(xs) + self.CROPPED_IMG_MARGIN
             y_min = min(ys) - self.CROPPED_IMG_MARGIN
             y_max = max(ys) + self.CROPPED_IMG_MARGIN
-            result = (x_min, y_min, x_max, y_max)
+            return (x_min, y_min, x_max, y_max)
+        return None
 
-        return result
-
-    def _crop_save_trace(self, trace_points):
+    def _crop_save_trace(self, frame):
         """
         Crop and save the trace image to be used as input for further spell recognition.
         """
-        bounds = self._update_trace_boundaries(trace_points)
-        result = None
+        bounds = self._update_trace_boundaries()
         if bounds:
             x_min, y_min, x_max, y_max = bounds
-            cropped_frame = self.cameraFrame[y_min:y_max, x_min:x_max]
+            cropped_frame = frame[y_min:y_max, x_min:x_max]
             resized_cropped_frame = resize_with_aspect_ratio(
                 cropped_frame, (self.OUTPUT_SIZE, self.OUTPUT_SIZE)
             )
-            result = resized_cropped_frame
-        return result
+            return resized_cropped_frame
+        return None

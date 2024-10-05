@@ -1,7 +1,7 @@
 {
   "alohomora": [
     {
-      "AudioEffect": "./media/audio/harry_potter_loop_3.mp3"
+      "AudioEffect": "./media/audio/alohomora.mp3"
     },
     {
       "ServoMotor": {
@@ -61,7 +61,7 @@
       }
     },
     {
-      "AudioEffect": "./media/audio/harry_potter_loop_3.mp3"
+      "AudioEffect": "./media/audio/arresto_momentum.mp3"
     },
     {
       "LightEffectNPP": {
@@ -113,7 +113,7 @@
       }
     },
     {
-      "AudioEffect": "./media/audio/harry_potter_loop_2.mp3"
+      "AudioEffect": "./media/audio/incendio.mp3"
     },
     {
       "LightEffectNPP": {
@@ -125,8 +125,9 @@
             "payload": {
               "customization_json": {
                 "rgb_colors": [[255, 69, 0], [255, 140, 0], [255, 165, 0]],
-                "loop_limit": 20,
+                "loop_limit": 15,
                 "duration_ms": 180,
+                "pause_ms" : 20,
                 "max_height": 0.6
               }
             }
@@ -165,7 +166,7 @@
       }
     },
     {
-      "AudioEffect": "./media/audio/harry_potter_loop_1.mp3"
+      "AudioEffect": "./media/audio/piertotum-locomotor.mp3"
     },
     {
       "LightEffectNPP": {
@@ -177,8 +178,8 @@
             "payload": {
               "customization_json": {
                 "rgb_colors": [[0, 255, 0]],
-                "loop_limit": 12,
-                "duration_ms": 240
+                "loop_limit": 3,
+                "duration_ms": 1000
               }
             }
           },
@@ -207,6 +208,9 @@
   ],
   "lumos": [
     {
+      "AudioEffect": "./media/audio/lumos_sound_effect.mp3"
+    },
+    {
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
@@ -214,16 +218,9 @@
           {"command": "stop"}
         ]
       }
-    },{
-      "UtilEffect": {
-        "commands": [
-          {"command": "wait", "payload": {"seconds": 1}} 
-        ]
-      }
     },
-    {
-      "AudioEffect": "./media/audio/harry_potter_loop_1.mp3"
-    },
+
+
     {
       "LightEffectNPP": {
         "gpio_pin": 10,
@@ -277,7 +274,7 @@
       }
     },
     {
-      "AudioEffect": "./media/audio/harry_potter_loop_2.mp3"
+      "AudioEffect": "./media/audio/revelio.mp3"
     },
     {
       "LightEffectNPP": {
@@ -422,9 +419,9 @@
     ]
   }}],
    
-  "TriwizardCup": [
+  "triwizard_cup": [
     {
-      "AudioEffect": "./media/audio/chalice.mp3"
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
     },
     {
       "LightEffectNPP": {

@@ -1,13 +1,17 @@
 from wand.detector.detector_blobs import WandDetector as BlobsDetector
 from wand.detector.detector_circles import WandDetector as CirclesDetector
 from wand.detector.detector_fast import WandDetector as FastDetector
-from wand.detector.detector_corners import WandDetector as CornersDetector
+from wand.detector.detector_circles_optimized import (
+    WandDetector as CirclesDetectorOptimized,
+)
+from wand.detector.detector_optical_flow import WandDetector as OpticalFlowDetector
 
 AVAILABLE_DETECTORS = {
     "blobs": BlobsDetector,
     "circles": CirclesDetector,
     "fast": FastDetector,
-    "corners": CornersDetector,
+    "circopt": CirclesDetectorOptimized,
+    "optical_flow": OpticalFlowDetector,
 }
 
 

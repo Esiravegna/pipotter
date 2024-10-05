@@ -13,7 +13,7 @@ class PiCameraCV(VideoSource):
     An OpenCV VideoCapture wrapper for PiCamera2 for headless systems, using grayscale images.
     """
 
-    def __init__(self, resolution=(640, 480), flip=False, queue_size=2):
+    def __init__(self, resolution=(320, 240), flip=False, queue_size=2):
         """
         Initialize the PiCamera with a frame queue for concurrent access.
         :param resolution: tuple of (width, height) to set the camera resolution
