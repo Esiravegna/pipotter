@@ -70,9 +70,7 @@ class PiPotterController:
         self.save_images_directory = kwargs.get("save_images_directory", None)
 
         logger.debug("Initializing WandDetector")
-        self.wand_detector = get_detector(
-            detector_type="optical_flow", video=self.video
-        )
+        self.wand_detector = get_detector(detector_type="circopt", video=self.video)
 
         logger.debug("Initializing SpellNet")
         self.spell_net = SpellNet()

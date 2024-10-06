@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class WandDetector(BaseDetector):
     POINTS_BUFFER_SIZE = 20
     TRACE_THICKNESS = 3
-    MAX_TRACE_SPEED = 250  # pixels/second
+    MAX_TRACE_SPEED = 400  # pixels/second
     CROPPED_IMG_MARGIN = 10  # pixels
     OUTPUT_SIZE = 224  # Output image size for the spell representation
 
@@ -77,14 +77,14 @@ class WandDetector(BaseDetector):
         # Refined area parameters to filter out noise and irrelevant blobs
         params.filterByArea = True
         params.minArea = (
-            20  # Increased minimum area to filter out smaller noise artifacts
+            5  # Increased minimum area to filter out smaller noise artifacts
         )
-        params.maxArea = 1000  # Decreased maximum area to ignore larger blobs
+        params.maxArea = 50  # Decreased maximum area to ignore larger blobs
 
         # Additional filters to refine detection
         params.filterByCircularity = True
         params.minCircularity = (
-            0.7  # Set a minimum circularity to filter out irregular shapes
+            0.6  # Set a minimum circularity to filter out irregular shapes
         )
 
         params.filterByConvexity = True
@@ -123,8 +123,8 @@ class WandDetector(BaseDetector):
             minDist=30,
             param1=50,
             param2=30,
-            minRadius=5,
-            maxRadius=15,
+            minRadius=3,
+            maxRadius=12,
         )
 
         # If circles are detected, add them as keypoints

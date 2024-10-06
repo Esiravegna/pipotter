@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class WandDetector(BaseDetector):
     POINTS_BUFFER_SIZE = 20
     TRACE_THICKNESS = 3
-    MAX_TRACE_SPEED = 250  # pixels/second
+    MAX_TRACE_SPEED = 400  # pixels/second
     CROPPED_IMG_MARGIN = 10  # pixels
     OUTPUT_SIZE = 224  # Output image size for the spell representation
 
@@ -75,14 +75,14 @@ class WandDetector(BaseDetector):
         params.filterByColor = True
         params.blobColor = 255  # Detect white blobs (wand tip is bright/reflective)
         params.filterByArea = True
-        params.minArea = 50  # Adjust min area based on wand tip size
-        params.maxArea = 800  # Adjust max area for filtering out larger noise
+        params.minArea = 20  # Adjust min area based on wand tip size
+        params.maxArea = 500  # Adjust max area for filtering out larger noise
         params.filterByCircularity = True
-        params.minCircularity = 0.7  # Target circular features like the wand tip
+        params.minCircularity = 0.8  # Target circular features like the wand tip
         params.filterByConvexity = True
-        params.minConvexity = 0.8
+        params.minConvexity = 0.9
         params.filterByInertia = True
-        params.minInertiaRatio = 0.4
+        params.minInertiaRatio = 0.5
         return cv2.SimpleBlobDetector_create(params)
 
     def detect_wand(self, frame):

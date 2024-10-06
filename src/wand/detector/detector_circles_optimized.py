@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class WandDetector(BaseDetector):
     POINTS_BUFFER_SIZE = 20
     TRACE_THICKNESS = 3
-    MAX_TRACE_SPEED = 250  # pixels/second
+    MAX_TRACE_SPEED = 400  # pixels/second
     CROPPED_IMG_MARGIN = 10  # pixels
     OUTPUT_SIZE = 224  # Output image size for the spell representation
 
@@ -67,10 +67,12 @@ class WandDetector(BaseDetector):
         params.filterByColor = True
         params.blobColor = 255  # Detect white blobs (wand tip is bright/reflective)
         params.filterByArea = True
-        params.minArea = 50  # Adjust min area based on wand tip size
-        params.maxArea = 800  # Adjust max area for filtering out larger noise
+        params.minArea = 7  # Adjust min area based on wand tip size. 50 for 640x480
+        params.maxArea = (
+            300  # Adjust max area for filtering out larger noise 800 for 640x480
+        )
         params.filterByCircularity = True
-        params.minCircularity = 0.7  # Target circular features like the wand tip
+        params.minCircularity = 0.6  # Target circular features like the wand tip
         params.filterByConvexity = True
         params.minConvexity = 0.8
         params.filterByInertia = True
@@ -99,7 +101,7 @@ class WandDetector(BaseDetector):
         )
 
         # Clean up noise with morphological operations (remove small artifacts)
-        kernel = np.ones((3, 3), np.uint8)
+        kernel = np.ones((2, 2), np.uint8)
         clean_frame = cv2.morphologyEx(thresholded_frame, cv2.MORPH_OPEN, kernel)
 
         # Detect blobs in the cleaned frame

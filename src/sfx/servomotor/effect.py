@@ -77,16 +77,19 @@ class ServoMotor(Effect):
         logger.info(
             f"ServoMotor initialized on pin {self.gpio_pin} with frequency {self.frequency}Hz"
         )
+        time.sleep(2)
 
     def set_angle(self, angle):
         """
         Set the servo angle.
         """
         logger.info(f"Setting servo angle to {angle} degrees")
-        duty_cycle = (0.05 * self.frequency) + (angle / 18.0)
+        # duty_cycle = (0.05 * self.frequency) + (angle / 18.0)
+        duty_cycle = float(angle) / 18.0 + 2.5
         self.pwm.ChangeDutyCycle(duty_cycle)
-        time.sleep(0.5)
-        self.pwm.ChangeDutyCycle(0)
+        time.sleep(2)
+        # self.pwm.ChangeDutyCycle(0)
+        self.pwm.stop()
 
     def stop(self):
         """Stop the servo motor and cleanup GPIO."""
@@ -94,6 +97,7 @@ class ServoMotor(Effect):
         if self.pwm:
             self.pwm.stop()
             GPIO.cleanup(self.gpio_pin)
+            time.sleep(2)
 
     def run(self):
         """
