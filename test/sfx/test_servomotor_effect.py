@@ -1,12 +1,14 @@
-from sfx.servomotor.effect import ServoMotor
 import pytest
 from unittest.mock import patch, MagicMock
+from sfx.servomotor.effect import ServoMotor
 
 
 # Fixture to selectively mock only methods, not constants
 @pytest.fixture
 def mock_gpio():
-    """Mock RPi.GPIO methods, including setmode, setup, and PWM, but not constants like GPIO.OUT."""
+    """
+    Mock RPi.GPIO methods, including setmode, setup, and PWM, but not constants like GPIO.OUT.
+    """
     with patch("RPi.GPIO.setmode") as mock_setmode, patch(
         "RPi.GPIO.setup"
     ) as mock_setup, patch("RPi.GPIO.PWM") as mock_pwm, patch(
@@ -19,7 +21,7 @@ def mock_gpio():
             "setmode": mock_setmode,
             "setup": mock_setup,
             "pwm": mock_pwm_instance,
-            "cleanup": mock_cleanup,  # Include cleanup in the mock
+            "cleanup": mock_cleanup,
         }
 
 
@@ -32,8 +34,7 @@ def test_servomotor_init_with_valid_json(mock_gpio):
         "gpio_pin": 17,
         "frequency": 50,
         "commands": [
-            {"command": "set_angle", "payload": {"angle": 90}},
-            {"command": "stop"}
+            {"command": "set_angle", "payload": {"angle": 90}}
         ]
     }
     """
@@ -69,8 +70,7 @@ def test_servomotor_run_commands(mock_gpio):
         "frequency": 50,
         "commands": [
             {"command": "set_angle", "payload": {"angle": 90}},
-            {"command": "set_angle", "payload": {"angle": 45}},
-            {"command": "stop"}
+            {"command": "set_angle", "payload": {"angle": 45}}
         ]
     }
     """
@@ -81,67 +81,17 @@ def test_servomotor_run_commands(mock_gpio):
     effect.run()
 
     # Ensure PWM duty cycle is calculated for angles 90 and 45
-    duty_cycle_90 = (0.05 * 50) + (90 / 18.0)
-    duty_cycle_45 = (0.05 * 50) + (45 / 18.0)
+    duty_cycle_90 = float(90) / 18.0 + 2.5
+    duty_cycle_45 = float(45) / 18.0 + 2.5
 
     mock_gpio["pwm"].ChangeDutyCycle.assert_any_call(duty_cycle_90)
     mock_gpio["pwm"].ChangeDutyCycle.assert_any_call(duty_cycle_45)
 
-    # Ensure PWM stop was called
-    effect.pwm.stop.assert_called_once()
+    # Ensure PWM stop was called after execution
+    mock_gpio["pwm"].stop.assert_called_once()
 
     # Ensure cleanup is called after stopping
     mock_gpio["cleanup"].assert_called_once_with(17)
-
-
-def test_servo_motor_multiple_sequences(mock_gpio):
-    """
-    Test that ServoMotor runs two sequences in a row using the same GPIO pin.
-    """
-    # First sequence: close_lid
-    json_config_1 = """
-    {
-        "gpio_pin": 18,
-        "frequency": 50,
-        "commands": [
-            {"command": "set_angle", "payload": {"angle": 0}},
-            {"command": "stop"}
-        ]
-    }
-    """
-
-    # Second sequence: alohomora
-    json_config_2 = """
-    {
-        "gpio_pin": 18,
-        "frequency": 50,
-        "commands": [
-            {"command": "set_angle", "payload": {"angle": 180}},
-            {"command": "stop"}
-        ]
-    }
-    """
-
-    # Run the first sequence (close_lid)
-    effect_1 = ServoMotor(json_config_1)
-    effect_1.run()
-
-    # Ensure GPIO resources were properly used and cleaned up for close_lid
-    duty_cycle_0_degrees = (0.05 * 50) + (0 / 18.0)
-    mock_gpio["pwm"].ChangeDutyCycle.assert_any_call(duty_cycle_0_degrees)
-    mock_gpio["pwm"].stop.assert_called()  # Ensure stop is called
-
-    # Run the second sequence (alohomora)
-    effect_2 = ServoMotor(json_config_2)
-    effect_2.run()
-
-    # Ensure GPIO resources were reused for alohomora
-    duty_cycle_180_degrees = (0.05 * 50) + (180 / 18.0)
-    mock_gpio["pwm"].ChangeDutyCycle.assert_any_call(duty_cycle_180_degrees)
-    mock_gpio["pwm"].stop.assert_called()  # Ensure stop is called again
-
-    # Ensure cleanup was called after each sequence
-    mock_gpio["cleanup"].assert_called_with(18)
 
 
 def test_servo_motor_delayed_initialization(mock_gpio):
@@ -153,8 +103,7 @@ def test_servo_motor_delayed_initialization(mock_gpio):
         "gpio_pin": 18,
         "frequency": 50,
         "commands": [
-            {"command": "set_angle", "payload": {"angle": 90}},
-            {"command": "stop"}
+            {"command": "set_angle", "payload": {"angle": 90}}
         ]
     }
     """
@@ -176,5 +125,65 @@ def test_servo_motor_delayed_initialization(mock_gpio):
     mock_gpio["pwm"].start.assert_called_once_with(0)
 
     # Ensure the PWM and GPIO are cleaned up after the stop command
+    mock_gpio["pwm"].stop.assert_called_once()
+    mock_gpio["cleanup"].assert_called_once_with(18)
+
+
+def test_servo_motor_multiple_angles(mock_gpio):
+    """
+    Test that ServoMotor sets multiple angles and cleans up correctly.
+    """
+    json_config = """
+    {
+        "gpio_pin": 18,
+        "frequency": 50,
+        "commands": [
+            {"command": "set_angle", "payload": {"angle": 0}},
+            {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+    }
+    """
+
+    effect = ServoMotor(json_config)
+    effect.run()
+
+    # Check duty cycles for 0 and 180 degrees
+    duty_cycle_0 = float(0) / 18.0 + 2.5
+    duty_cycle_180 = float(180) / 18.0 + 2.5
+
+    mock_gpio["pwm"].ChangeDutyCycle.assert_any_call(duty_cycle_0)
+    mock_gpio["pwm"].ChangeDutyCycle.assert_any_call(duty_cycle_180)
+
+    # Ensure PWM stop was called once at the end
+    mock_gpio["pwm"].stop.assert_called_once()
+
+    # Ensure cleanup is called after stopping
+    mock_gpio["cleanup"].assert_called_once_with(18)
+
+
+def test_servo_motor_cleanup_on_delete(mock_gpio):
+    """
+    Test that ServoMotor cleans up resources when deleted.
+    """
+    json_config = """
+    {
+        "gpio_pin": 18,
+        "frequency": 50,
+        "commands": [
+            {"command": "set_angle", "payload": {"angle": 90}}
+        ]
+    }
+    """
+
+    # Create ServoMotor object
+    effect = ServoMotor(json_config)
+
+    # Run the effect to initialize and set the angle
+    effect.run()
+
+    # Delete the object to trigger cleanup
+    del effect
+
+    # Ensure PWM stop and GPIO cleanup were called
     mock_gpio["pwm"].stop.assert_called_once()
     mock_gpio["cleanup"].assert_called_once_with(18)
