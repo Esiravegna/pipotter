@@ -164,7 +164,7 @@ class WandDetector(BaseDetector):
 
         # Superimpose the trace and debug info onto the latest wand frame
         self.latest_wand_frame = self.superimpose_trace_and_debug_info(
-            frame.copy(),
+            clean_frame.copy(),
             self.wand_move_tracing_frame,
             self.blobKeypoints,
             speed,

@@ -77,7 +77,7 @@ class WandDetector(BaseDetector):
         # Refined area parameters to filter out noise and irrelevant blobs
         params.filterByArea = True
         params.minArea = (
-            5  # Increased minimum area to filter out smaller noise artifacts
+            12  # Increased minimum area to filter out smaller noise artifacts
         )
         params.maxArea = 50  # Decreased maximum area to ignore larger blobs
 
