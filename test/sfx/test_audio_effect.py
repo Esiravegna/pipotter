@@ -3,6 +3,7 @@ import pytest
 from core.error import SFXError
 from sfx.audio.effect import AudioEffect
 
+
 class MockPlayer(object):
     """
     Just a mock for the player
@@ -52,6 +53,6 @@ def test_invalid_file(a_player, not_a_valid_file):
 
 
 def test_faulty_palyer_response(a_broken_player, a_valid_file):
-    fx = AudioEffect(mediaplayer=a_broken_player,the_filename=a_valid_file)
+    fx = AudioEffect(mediaplayer=a_broken_player, the_filename=a_valid_file)
     with pytest.raises(SFXError):
         fx.run()

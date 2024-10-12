@@ -1,75 +1,97 @@
 import pytest
+from unittest.mock import patch, MagicMock
+import json
+from src.sfx.lights.effect import (
+    LightEffect,
+    SFXError,
+)  # Assuming your code is in light_effect.py
 
-from core.error import SFXError
-from sfx.lights.effect import LightEffect
+
+@pytest.fixture
+def mock_neopixel():
+    with patch("neopixel.NeoPixel") as mock_strip:
+        yield mock_strip
 
 
-class MockController(object):
+@pytest.fixture
+def mock_board():
+    with patch("board.D18", 18):  # Simulate board.D18 as integer pin 18
+        yield
+
+
+@pytest.fixture
+def mock_pixel_order():
+    with patch("neopixel.GRB", "GRB"):  # Simulate neopixel.GRB as string 'GRB'
+        yield
+
+
+def test_valid_json_config(mock_neopixel, mock_board, mock_pixel_order):
     """
-    Just a mock for the controller with the basic commands
+    Test that the NeoPixel strip is initialized correctly from valid JSON configuration.
     """
-
-    def cancel(self, key):
-        pass
-
-    def repeat(self, seq, reps):
-        pass
-
-
-class MockLightBulb(object):
+    json_config = """
+    {
+        "gpio_pin": "D18",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": [
+            {"command": "rollcall_cycle", "payload": {"wait": 0.1}}
+        ]
+    }
     """
-    Just a mock for the light object with some commands
+    effect = LightEffect(json_config)
+
+    # Ensure the NeoPixel object was created with the correct parameters
+    mock_neopixel.assert_called_once_with(
+        18, 16, brightness=0.5, auto_write=False, pixel_order="GRB"
+    )
+
+    # Run the effect (will use the mock)
+    effect.run()
+    assert (
+        mock_neopixel.return_value.show.call_count > 0
+    ), "Expected show() to be called"
+
+
+def test_missing_required_params(mock_neopixel, mock_board, mock_pixel_order):
     """
+    Test missing required configuration parameters raises SFXError.
+    """
+    json_config = """
+    {
+        "brightness": 0.5,
+        "pixel_order": "GRB",
+        "commands": []
+    }
+    """  # Missing 'gpio_pin' and 'num_leds'
 
-    def brightness(self, payload, group):
-        pass
-
-    def warmness(self, payload, group):
-        pass
-
-    def fade_up(self, group):
-        pass
-
-
-@pytest.fixture(scope="module")
-def a_controller():
-    return MockController()
+    with pytest.raises(SFXError, match="Missing required configuration parameter"):
+        LightEffect(json_config)
 
 
-@pytest.fixture(scope="module")
-def valid_json():
-    return '[{"group": "1","command": "brightness","payload": "50"},{"group": "1","command": "warmness","payload": ' \
-           '"50"},{"group": "1","command": "fade_up"}]'
+def test_invalid_json_format(mock_neopixel, mock_board, mock_pixel_order):
+    """
+    Test that invalid JSON format raises SFXError.
+    """
+    invalid_json = """{ "gpio_pin": "D18", "num_leds": 16, """  # Incomplete JSON
+
+    with pytest.raises(SFXError, match="Invalid JSON configuration"):
+        LightEffect(invalid_json)
 
 
-@pytest.fixture(scope="module")
-def broken_json():
-    return '[{}{}"group": "1","command": "brightness","payload": "50"},{"group": "1","command": "warmness","payload": ' \
-           '"50"},{"group": "1","command": "fade_up"}]'
-
-
-@pytest.fixture(scope="module")
-def invalid_command_json():
-    return '[{"group": "1","command": "brightness","payload": "50"},{"group": "1","command": "warmness","payload": ' \
-           '"50"},{"group": "1","command": "this_will_not_work","payload": ""}]'
-
-
-@pytest.fixture(scope="module")
-def a_bulb():
-    return MockLightBulb()
-
-
-def test_happy_path(a_controller, a_bulb, valid_json):
-    fx = LightEffect(valid_json, a_controller, a_bulb, time_to_sleep=0)
-    fx.run()
-
-
-def test_invalid_json_will_work_but_log_a_error(a_controller, a_bulb, invalid_command_json):
-    fx = LightEffect( invalid_command_json, a_controller, a_bulb, time_to_sleep=0)
-    fx.run()
-
-
-def test_a_broken_json_will_fail(a_controller, a_bulb, broken_json):
-    with pytest.raises(SFXError):
-        fx = LightEffect(broken_json,  a_controller, a_bulb, time_to_sleep=0)
-
+def test_invalid_gpio_or_pixel_order(mock_neopixel, mock_board, mock_pixel_order):
+    """
+    Test that invalid GPIO pin or pixel order raises SFXError.
+    """
+    json_config = """
+    {
+        "gpio_pin": "INVALID_PIN",
+        "num_leds": 16,
+        "brightness": 0.5,
+        "pixel_order": "INVALID_ORDER",
+        "commands": []
+    }
+    """
+    with pytest.raises(SFXError, match="Invalid GPIO pin or pixel order"):
+        LightEffect(json_config)

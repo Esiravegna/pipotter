@@ -1,0 +1,496 @@
+{
+  "alohomora": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/alohomora.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[255, 223, 0]],
+                "duration_ms": 850,
+                "loop_limit": 4
+              }
+            }
+          },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 500,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    },    
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "arresto_momentum": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/arresto_momentum.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "moving_dot",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[173, 216, 230]],
+                "duration_ms": 3500,
+                "loop_limit": 1,
+                "pause_a_ms": 500,
+                "pause_b_ms": 800
+              }
+            }
+          },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 500,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    },    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "incendio": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/incendio.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "beats",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[255, 69, 0], [255, 140, 0], [255, 165, 0]],
+                "loop_limit": 15,
+                "duration_ms": 180,
+                "pause_ms" : 20,
+                "max_height": 0.6
+              }
+            }
+          },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 500,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    },    
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "locomotor": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/piertotum-locomotor.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "moving_dot",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 255, 0]],
+                "loop_limit": 3,
+                "duration_ms": 1000
+              }
+            }
+          },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 500,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    },    
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "lumos": [
+
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/lumos_sound_effect.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[255, 255, 255]],
+                "loop_limit": 1,
+                "duration_ms": 2000
+              }
+            }
+          }
+        ,
+        {
+          "command": "wait",
+          "payload": {"wait": 1.5}
+        },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 500,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    },    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "revelio": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/revelio.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 255, 255], [255, 0, 255]],
+                "duration_ms": 2000,
+                "loop_limit": 3
+              }
+            }
+          },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 1000,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    },    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "colloportus": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop_4.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 10,
+        "num_leds": 16,
+        "commands": [
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 128], [138, 43, 226]],
+                "duration_ms": 1500,
+                "loop_limit": 3,
+                "pause_ms": 500
+              }
+            }
+          },
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+                "rgb_colors": [[0, 0, 0]],
+                "duration_ms": 1000,
+                "loop_limit": 1
+              }
+            }
+          }
+        ]
+      }
+    }, 
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 0}}
+        ]
+      }
+    }
+  ],
+  "pipotter_ready": [
+    {
+      "ServoMotor": {
+        "gpio_pin": 18,
+        "commands": [
+          {"command": "set_angle", "payload": {"angle": 180}}
+        ]
+      }
+    },
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop_1.mp3"
+    },
+    {
+      "LEDControl": {
+      "led_pins": {
+          "red": 25,
+          "yellow":24,
+          "green": 23
+      },
+      "commands": [
+          {"command": "turn_on", "payload": {"led": "green"}},
+          {"command": "turn_off", "payload": {"led": "yellow"}},
+          {"command": "turn_off", "payload": {"led": "red"}}
+      ]
+   }},
+  {"UtilEffect": {
+    "commands": [
+      {"command": "wait", "payload": {"seconds": 5}}
+  ]
+  }},
+  {
+    "ServoMotor": {
+      "gpio_pin": 18,
+      "commands": [
+        {"command": "set_angle", "payload": {"angle": 0}},
+        {"command": "stop"}
+      ]
+    }
+  },
+  {
+    "LEDControl": {
+    "led_pins": {
+        "red": 25,
+        "yellow":24,
+        "green": 23
+    },
+    "commands": [
+        {"command": "turn_off", "payload": {"led": "green"}},
+        {"command": "turn_off", "payload": {"led": "yellow"}},
+        {"command": "turn_off", "payload": {"led": "red"}}
+    ]
+  }}],
+   
+  "triwizard_cup": [
+    {
+      "AudioEffect": "./media/audio/harry_potter_loop.mp3"
+    },
+    {
+      "LightEffectNPP": {
+        "gpio_pin": 21,
+        "num_leds": 7,
+        "commands": [
+
+          {
+            "command": "light_up",
+            "payload": {
+              "customization_json": {
+              "brightness": 0.5,
+              "loop_limit": 1,
+              "duration_ms": 1000,
+              "pause_ms": 100,
+              "rgb_colors": [[0, 120, 255]]
+            }
+          }
+          },
+          {
+            "command": "moving_dot",
+            "customization_json": {
+            "payload": {
+              "brightness": 1.0,
+              "loop_limit": 1,
+              "duration_ms": 500,
+              "rgb_colors": [[0, 120, 255]]
+            }}
+          },
+          {
+            "command": "beats",
+            "payload": {
+              "customization_json": {
+              "brightness": 1.0,
+              "loop_limit": 7,
+              "duration_ms": 800,
+              "pause_ms": 400,
+              "rgb_colors": [
+                [173, 216, 230],  
+                [135, 206, 250],  
+                [240, 255, 255],  
+                [224, 255, 255],  
+                [255, 255, 255]   
+              ]
+            }
+          }
+          },
+          {
+            "command": "transition",
+            "payload": {
+              "customization_json": {
+                "brightness": 0.0,
+                "loop_limit": 1,
+                "duration_ms": 700,
+                "pause_ms": 200,
+                "rgb_colors": [
+                  [0, 0, 90],  
+                  [0, 0, 120],
+                  [0, 0, 250],    
+                  [0, 0, 0]  
+                ]
+              }
+            
+            }
+          }
+        ]
+      }
+    },
+    {
+      "wand_lock": [
+      {"LEDControl": {
+      "led_pins": {
+          "red": 25,
+          "yellow":24,
+          "green": 23
+      },
+      "commands": [
+          {"command": "turn_off", "payload": {"led": "green"}},
+          {"command": "turn_on", "payload": {"led": "yellow"}},
+          {"command": "turn_off", "payload": {"led": "red"}}
+      ]
+    }
+  }
+    ]
+   }
+  ]
+
+}
