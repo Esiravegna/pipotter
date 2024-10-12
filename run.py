@@ -3,6 +3,7 @@ import click
 from pathlib import Path
 import sys
 from sys import exit
+import time
 import uvicorn
 
 project_root = Path(__file__).parent
@@ -94,6 +95,13 @@ def run_command(
         )
     else:
         logger.info("Webserver not started. Running without FastAPI.")
+        try:
+            while True:
+                time.sleep(1)  # Keep the main thread alive when no webserver is running
+        except KeyboardInterrupt:
+            logger.info("Shutting down PiPotter without FastAPI.")
+            PiPotter.stop_event.set()  # Signal the PiPotterController to stop
+            PiPotter.video_thread.join()  # Ensure the video thread is cleanly joined
 
 
 if __name__ == "__main__":

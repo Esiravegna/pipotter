@@ -473,8 +473,24 @@
           }
         ]
       }
+    },
+    {
+      "wand_lock": [
+      {"LEDControl": {
+      "led_pins": {
+          "red": 25,
+          "yellow":24,
+          "green": 23
+      },
+      "commands": [
+          {"command": "turn_off", "payload": {"led": "green"}},
+          {"command": "turn_on", "payload": {"led": "yellow"}},
+          {"command": "turn_off", "payload": {"led": "red"}}
+      ]
     }
+  }
+    ]
+   }
   ]
-
 
 }
