@@ -4,8 +4,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -44,8 +43,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -55,8 +53,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -96,8 +93,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -107,8 +103,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -149,8 +144,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -160,8 +154,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -200,8 +193,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -212,8 +204,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -256,8 +247,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -267,8 +257,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -306,8 +295,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -317,8 +305,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
@@ -358,8 +345,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 0}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 0}}
         ]
       }
     }
@@ -369,8 +355,7 @@
       "ServoMotor": {
         "gpio_pin": 18,
         "commands": [
-          {"command": "set_angle", "payload": {"angle": 180}},
-          {"command": "stop"}
+          {"command": "set_angle", "payload": {"angle": 180}}
         ]
       }
     },
