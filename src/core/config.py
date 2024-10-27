@@ -10,7 +10,7 @@ settings = {
     # Extra audios should these be needed. For instance, the default allows a USB soundcard attached to ALSA.
     "PIPOTTER_EXTRA_AUDIO_COMMANDS": ["-volume", "5"],
     # Flip list, as per all the video_source objects
-    "PIPOTTER_FLIP_VIDEO": getenv("PIPOTTER_FLIP_VIDEO", [2]),
+    "PIPOTTER_FLIP_VIDEO": getenv("PIPOTTER_FLIP_VIDEO", True),
     # How many seconds will be used to draw, aka, how long the scanner will track a wand after calling it done
     "PIPOTTER_SECONDS_TO_DRAW": getenv("PIPOTTER_SECONDS_TO_DRAW", 3),
     # Where to retrieve/store the SpellNet file

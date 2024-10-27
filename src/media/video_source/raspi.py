@@ -68,7 +68,7 @@ class PiCameraCV(VideoSource):
 
             # Apply flip if needed
             if self.flip:
-                gray_frame = cv2.flip(gray_frame, 1)
+                gray_frame = cv2.flip(gray_frame, 0)
 
             # Put the frame into the queue (non-blocking)
             try:

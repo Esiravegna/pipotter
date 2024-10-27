@@ -66,20 +66,21 @@
 </head>
 <body>
     <div class="feed">
-        <div class="feed-title">Video Feed</div>
+        <div class="feed-title">Als je een groene stip zie, bent je klaar.</div>
         <img src="/video_feed" alt="Video Feed" />
     </div>
-    <div class="feed">
+    <!--<div class="feed">
         <div class="feed-title">Spell Feed</div>
         <img src="/spell_feed" alt="Spell Feed" />
+    -->
     <div class="predictions">
-        <h3 class="section-title">Predictions</h3>
+        <h3 class="section-title">Tovercifer</h3>
         <ul id="predictions-list">
             <!-- Predictions will be dynamically loaded here -->
         </ul>
     </div>
     <div class="images">
-        <h3 class="section-title">Base Images</h3>
+        <h3 class="section-title">Toverstafbewegingen</h3>
         {% for image in base_images %}
         <div class="image-container">
             <img src="/media/base_images/{{ image.filename }}" alt="{{ image.title }}">
@@ -96,7 +97,7 @@
 
             for (const [spell, probability] of Object.entries(predictions)) {
                 const li = document.createElement('li');
-                li.textContent = `${spell}: ${probability.toFixed(2)}`;
+                li.textContent = `${spell}: ${ (probability.toFixed(2) * 10)}`;
                 predictionsList.appendChild(li);
             }
         }

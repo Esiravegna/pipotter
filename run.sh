@@ -6,6 +6,7 @@ if [ ! -d "$ENV_DIR" ]; then
 fi
 echo "Virtual environment '$ENV_DIR' : ✅"
 echo "Info: Activating virtual environment..."
+export PIPOTTER_FLIP_VIDEO=True
 source "$ENV_DIR/bin/activate"
 echo "...✅"
 PULSE_SERVER="/run/pulse/native" python run.py "$@"
