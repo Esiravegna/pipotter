@@ -11,7 +11,7 @@ attrs==24.2.0
 av==10.0.0
 binho-host-adapter==0.1.6
 blinker==1.8.2
-certifi==2022.9.24
+certifi==2026.10.19
 chardet==5.1.0
 charset-normalizer==3.0.1
 click==8.1.7
